@@ -78,8 +78,12 @@ def print_menu() -> None:
 
 def main() -> None:
     """Загрузить данные и запустить цикл обработки команд пользователя."""
-    orders = load_orders(ORDERS_FILE)
-    couriers = load_couriers(COURIERS_FILE)
+    try:
+        orders = load_orders(ORDERS_FILE)
+        couriers = load_couriers(COURIERS_FILE)
+    except (OSError, ValueError) as error:
+        print(f"Не удалось запустить приложение: {error}")
+        return
 
     while True:
         print_menu()
