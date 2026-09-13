@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "destination": "ул. Ленина, 15",
+    "weight": 25.5,
+    "status": "назначен",
+    "courier": "Иван"
+  },
+  {
+    "id": 2,
+    "destination": "пр. Мира, 10",
+    "weight": 10.0,
+    "status": "назначен",
+    "courier": "Мария"
+  },
+  {
+    "id": 3,
+    "destination": "Кремль, 1",
+    "weight": 60.0,
+    "status": "создан",
+    "courier": null
+  }
+]

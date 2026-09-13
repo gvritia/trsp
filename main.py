@@ -1,109 +1,135 @@
-orders = []  # Список заказов
-couriers = ["Иван", "Мария", "Алексей"]  # Доступные курьеры
+"""Консольный интерфейс системы планирования доставки."""
+
+from pathlib import Path
+from typing import Any
+
+from couriers import assign_courier, is_courier_available
+from orders import (
+    calculate_efficiency,
+    cancel_order,
+    create_order,
+    find_orders,
+    sort_orders,
+)
+from storage import load_couriers, load_orders, save_orders
+from utils import input_float, input_int
 
 
-# ============== Функция 1: Создание заказа ==============
-
-def create_order(destination, weight):
-    """Создает новый заказ"""
-    if weight <= 0:
-        print("Ошибка: вес должен быть больше 0")
-        return None
-
-    order = {
-        "id": len(orders) + 1,
-        "destination": destination,
-        "weight": weight,
-        "status": "создан",
-        "courier": None
-    }
-    orders.append(order)
-    print(f"Заказ #{order['id']} создан: {destination}, {weight} кг")
-    return order
+DATA_DIR = Path(__file__).parent / "data"
+ORDERS_FILE = DATA_DIR / "orders.json"
+COURIERS_FILE = DATA_DIR / "couriers.json"
 
 
-# ============== Функция 2: Назначение курьера ==============
+def show_orders(orders: list[dict[str, Any]]) -> None:
+    """Вывести список заказов."""
+    if not orders:
+        print("Список заказов пуст.")
+        return
 
-def assign_courier(order, courier_name):
-    """Назначает курьера на заказ"""
-    if order is None:
-        print("Ошибка: заказ не найден")
-        return False
-
-    if courier_name not in couriers:
-        print(f"Ошибка: курьер {courier_name} не найден")
-        return False
-
-    if order["status"] != "создан":
-        print(f"Ошибка: заказ уже {order['status']}")
-        return False
-
-    # Проверка грузоподъемности (упрощенно)
-    if order["weight"] > 50:
-        print(f"Предупреждение: вес {order['weight']} кг превышает норму")
-
-    order["courier"] = courier_name
-    order["status"] = "назначен"
-    print(f"Курьер {courier_name} назначен на заказ #{order['id']}")
-    return True
-
-
-# ============== Функция 3: Расчет эффективности ==============
-
-def calculate_efficiency():
-    """Рассчитывает процент назначенных заказов"""
-    if len(orders) == 0:
-        print("Нет заказов")
-        return 0.0
-
-    assigned = 0
+    print("\n--- Заказы ---")
     for order in orders:
-        if order["status"] == "назначен":
-            assigned += 1
-
-    efficiency = (assigned / len(orders)) * 100
-
-    print(f"\n--- Статистика ---")
-    print(f"Всего заказов: {len(orders)}")
-    print(f"Назначено: {assigned}")
-    print(f"Эффективность: {round(efficiency, 1)}%")
-
-    if efficiency >= 70:
-        print("Оценка: хорошо")
-    elif efficiency >= 40:
-        print("Оценка: удовлетворительно")
-    else:
-        print("Оценка: требуется улучшение")
-
-    return efficiency
-
-
-# ============== Основной сценарий ==============
-
-def main():
-    print("=== Система доставки ===\n")
-
-    # Создание заказов
-    order1 = create_order("ул. Ленина, 15", 25.5)
-    order2 = create_order("пр. Мира, 10", 10.0)
-    order3 = create_order("ул. Тверская, 5", -5.0)  # Ошибка
-    order4 = create_order("Кремль, 1", 60.0)
-
-    # Назначение курьеров
-    assign_courier(order1, "Иван")
-    assign_courier(order2, "Мария")
-    assign_courier(order3, "Алексей")  # order3 = None
-    assign_courier(order4, "Петр")  # Курьер не найден
-    assign_courier(order1, "Алексей")  # Уже назначен
-
-    # Расчет эффективности
-    calculate_efficiency()
-
-    # Вывод всех заказов
-    print("\n--- Все заказы ---")
-    for o in orders:
+        courier = order.get("courier") or "не назначен"
         print(
-            f"#{o['id']}: {o['destination']} | {o['weight']} кг | {o['status']} | Курьер: {o['courier'] or 'не назначен'}")
+            f"#{order['id']}: {order['destination']} | "
+            f"{order['weight']} кг | {order['status']} | "
+            f"курьер: {courier}"
+        )
+
+
+def show_couriers(
+    couriers: list[dict[str, Any]], orders: list[dict[str, Any]]
+) -> None:
+    """Вывести курьеров и их текущую загрузку."""
+    if not couriers:
+        print("Список курьеров пуст.")
+        return
+
+    print("\n--- Курьеры ---")
+    for courier in couriers:
+        assigned_weight = sum(
+            float(order["weight"])
+            for order in orders
+            if order.get("courier") == courier["name"]
+            and order.get("status") == "назначен"
+        )
+        state = "доступен" if courier.get("active", True) else "недоступен"
+        print(
+            f"{courier['name']}: {assigned_weight:g}/"
+            f"{courier['capacity']:g} кг, {state}"
+        )
+
+
+def print_menu() -> None:
+    """Вывести главное меню приложения."""
+    print(
+        "\n=== Система планирования маршрутов доставки ===\n"
+        "1. Показать заказы\n"
+        "2. Создать заказ\n"
+        "3. Найти заказ\n"
+        "4. Отсортировать заказы по весу\n"
+        "5. Показать курьеров\n"
+        "6. Проверить доступность курьера\n"
+        "7. Назначить курьера\n"
+        "8. Отменить заказ\n"
+        "9. Показать эффективность\n"
+        "0. Выход"
+    )
+
+
+def main() -> None:
+    """Загрузить данные и запустить цикл обработки команд пользователя."""
+    orders = load_orders(ORDERS_FILE)
+    couriers = load_couriers(COURIERS_FILE)
+
+    while True:
+        print_menu()
+        choice = input("Выберите действие: ").strip()
+        if choice == "0":
+            print("Данные сохранены. До свидания!")
+            break
+
+        try:
+            if choice == "1":
+                show_orders(orders)
+            elif choice == "2":
+                destination = input("Адрес доставки: ").strip()
+                weight = input_float("Вес заказа, кг: ", minimum=0.01)
+                order = create_order(orders, destination, weight)
+                save_orders(ORDERS_FILE, orders)
+                print(f"Заказ #{order['id']} создан.")
+            elif choice == "3":
+                query = input("Адрес или имя курьера: ").strip()
+                show_orders(find_orders(orders, query))
+            elif choice == "4":
+                show_orders(sort_orders(orders, key="weight"))
+            elif choice == "5":
+                show_couriers(couriers, orders)
+            elif choice == "6":
+                courier_name = input("Имя курьера: ").strip()
+                weight = input_float("Вес нового заказа, кг: ", minimum=0)
+                available = is_courier_available(
+                    couriers, orders, courier_name, weight
+                )
+                message = "доступен" if available else "недоступен"
+                print(f"Курьер {courier_name} {message} для этого заказа.")
+            elif choice == "7":
+                order_id = input_int("Номер заказа: ", minimum=1)
+                courier_name = input("Имя курьера: ").strip()
+                assign_courier(orders, couriers, order_id, courier_name)
+                save_orders(ORDERS_FILE, orders)
+                print(f"Курьер назначен на заказ #{order_id}.")
+            elif choice == "8":
+                order_id = input_int("Номер заказа: ", minimum=1)
+                cancel_order(orders, order_id)
+                save_orders(ORDERS_FILE, orders)
+                print(f"Заказ #{order_id} отменён.")
+            elif choice == "9":
+                efficiency = calculate_efficiency(orders)
+                print(f"Эффективность назначения: {efficiency:.1f}%")
+            else:
+                print("Ошибка: выберите пункт меню от 0 до 9.")
+        except (OSError, ValueError) as error:
+            print(f"Ошибка: {error}")
 
 
 if __name__ == "__main__":

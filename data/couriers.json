@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "Иван",
+    "capacity": 50.0,
+    "active": true
+  },
+  {
+    "id": 2,
+    "name": "Мария",
+    "capacity": 30.0,
+    "active": true
+  },
+  {
+    "id": 3,
+    "name": "Алексей",
+    "capacity": 70.0,
+    "active": true
+  }
+]
