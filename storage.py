@@ -1,14 +1,16 @@
-"""Загрузка и сохранение данных проекта в формате JSON."""
+"""Загрузка и сохранение объектной модели в формате JSON."""
 
 import json
 from pathlib import Path
 from typing import Any
 
+from models import Client, Courier, Order, Route
+
 JsonRecord = dict[str, Any]
 
 
 def load_records(file_path: Path) -> list[JsonRecord]:
-    """Загрузить записи; для отсутствующего файла вернуть пустой список."""
+    """Загрузить JSON-записи или вернуть пустой список."""
     try:
         with file_path.open("r", encoding="utf-8") as source:
             data = json.load(source)
@@ -25,7 +27,7 @@ def load_records(file_path: Path) -> list[JsonRecord]:
 
 
 def save_records(file_path: Path, records: list[JsonRecord]) -> None:
-    """Сохранить список словарей, автоматически создав каталог данных."""
+    """Сохранить JSON-записи, автоматически создав каталог данных."""
     file_path.parent.mkdir(parents=True, exist_ok=True)
     try:
         with file_path.open("w", encoding="utf-8") as destination:
@@ -35,41 +37,55 @@ def save_records(file_path: Path, records: list[JsonRecord]) -> None:
         raise OSError(f"не удалось сохранить данные в {file_path}") from error
 
 
-def load_orders(file_path: Path) -> list[JsonRecord]:
-    """Загрузить заказы из JSON-файла."""
-    return load_records(file_path)
+def load_clients(file_path: Path) -> list[Client]:
+    """Загрузить клиентов и создать объекты Client."""
+    return [Client.from_data(data) for data in load_records(file_path)]
 
 
-def save_orders(file_path: Path, orders: list[JsonRecord]) -> None:
-    """Сохранить заказы в JSON-файл."""
-    save_records(file_path, orders)
+def save_clients(file_path: Path, clients: list[Client]) -> None:
+    """Преобразовать клиентов в JSON-данные и сохранить."""
+    save_records(file_path, [client.to_data() for client in clients])
 
 
-def load_couriers(file_path: Path) -> list[JsonRecord]:
-    """Загрузить курьеров из JSON-файла."""
-    return load_records(file_path)
+def load_couriers(file_path: Path) -> list[Courier]:
+    """Загрузить курьеров и создать объекты Courier."""
+    return [Courier.from_data(data) for data in load_records(file_path)]
 
 
-def save_couriers(file_path: Path, couriers: list[JsonRecord]) -> None:
-    """Сохранить курьеров в JSON-файл."""
-    save_records(file_path, couriers)
+def save_couriers(file_path: Path, couriers: list[Courier]) -> None:
+    """Преобразовать курьеров в JSON-данные и сохранить."""
+    save_records(file_path, [courier.to_data() for courier in couriers])
 
 
-def load_clients(file_path: Path) -> list[JsonRecord]:
-    """Загрузить клиентов из JSON-файла."""
-    return load_records(file_path)
+def load_orders(
+    file_path: Path,
+    clients: list[Client],
+    couriers: list[Courier],
+) -> list[Order]:
+    """Загрузить заказы и восстановить связи с клиентами и курьерами."""
+    return [
+        Order.from_data(data, clients, couriers)
+        for data in load_records(file_path)
+    ]
 
 
-def save_clients(file_path: Path, clients: list[JsonRecord]) -> None:
-    """Сохранить клиентов в JSON-файл."""
-    save_records(file_path, clients)
+def save_orders(file_path: Path, orders: list[Order]) -> None:
+    """Преобразовать заказы в JSON-данные и сохранить."""
+    save_records(file_path, [order.to_data() for order in orders])
 
 
-def load_routes(file_path: Path) -> list[JsonRecord]:
-    """Загрузить маршруты из JSON-файла."""
-    return load_records(file_path)
+def load_routes(
+    file_path: Path,
+    orders: list[Order],
+    couriers: list[Courier],
+) -> list[Route]:
+    """Загрузить маршруты и восстановить связи с заказами и курьерами."""
+    return [
+        Route.from_data(data, orders, couriers)
+        for data in load_records(file_path)
+    ]
 
 
-def save_routes(file_path: Path, routes: list[JsonRecord]) -> None:
-    """Сохранить маршруты в JSON-файл."""
-    save_records(file_path, routes)
+def save_routes(file_path: Path, routes: list[Route]) -> None:
+    """Преобразовать маршруты в JSON-данные и сохранить."""
+    save_records(file_path, [route.to_data() for route in routes])

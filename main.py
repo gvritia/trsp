@@ -1,24 +1,26 @@
 """Консольный интерфейс системы планирования доставки."""
 
 from pathlib import Path
-from typing import Any
 
-from clients import add_client, find_clients, get_client
-from couriers import assign_courier, is_courier_available
-from orders import (
+from models import Client, Courier, Order, Route
+from models.clients import add_client, find_clients, get_client
+from models.couriers import is_courier_available
+from models.orders import (
+    assign_courier,
     calculate_efficiency,
     cancel_order,
     create_order,
     find_orders,
     sort_orders,
 )
-from routes import complete_route, create_route
+from models.routes import complete_route, create_route
 from storage import (
     load_clients,
     load_couriers,
     load_orders,
     load_routes,
     save_clients,
+    save_couriers,
     save_orders,
     save_routes,
 )
@@ -31,70 +33,22 @@ CLIENTS_FILE = DATA_DIR / "clients.json"
 ROUTES_FILE = DATA_DIR / "routes.json"
 
 
-def show_orders(orders: list[dict[str, Any]]) -> None:
-    """Вывести список заказов."""
-    if not orders:
-        print("Список заказов пуст.")
+def show_items(items: list[object], empty_message: str) -> None:
+    """Полиморфно вывести коллекцию объектов через их методы __str__."""
+    if not items:
+        print(empty_message)
         return
-
-    print("\n--- Заказы ---")
-    for order in orders:
-        courier = order.get("courier") or "не назначен"
-        client_id = order.get("client_id") or "не указан"
-        print(
-            f"#{order['id']}: {order['destination']} | "
-            f"{order['weight']} кг | {order['status']} | "
-            f"клиент: #{client_id} | курьер: {courier}"
-        )
+    for item in items:
+        print(item)
 
 
-def show_couriers(
-    couriers: list[dict[str, Any]], orders: list[dict[str, Any]]
-) -> None:
-    """Вывести курьеров и их текущую загрузку."""
+def show_couriers(couriers: list[Courier], orders: list[Order]) -> None:
+    """Вывести курьеров и рассчитанную методами объектов загрузку."""
     if not couriers:
         print("Список курьеров пуст.")
         return
-
-    print("\n--- Курьеры ---")
     for courier in couriers:
-        assigned_weight = sum(
-            float(order["weight"])
-            for order in orders
-            if order.get("courier") == courier["name"]
-            and order.get("status") == "назначен"
-        )
-        state = "доступен" if courier.get("active", True) else "недоступен"
-        print(
-            f"{courier['name']}: {assigned_weight:g}/"
-            f"{courier['capacity']:g} кг, {state}"
-        )
-
-
-def show_clients(clients: list[dict[str, Any]]) -> None:
-    """Вывести список клиентов."""
-    if not clients:
-        print("Список клиентов пуст.")
-        return
-
-    print("\n--- Клиенты ---")
-    for client in clients:
-        print(f"#{client['id']}: {client['name']} | {client['phone']}")
-
-
-def show_routes(routes: list[dict[str, Any]]) -> None:
-    """Вывести список маршрутов."""
-    if not routes:
-        print("Список маршрутов пуст.")
-        return
-
-    print("\n--- Маршруты ---")
-    for route in routes:
-        order_numbers = ", ".join(map(str, route["order_ids"]))
-        print(
-            f"#{route['id']}: курьер {route['courier']} | "
-            f"заказы: {order_numbers} | {route['status']}"
-        )
+        print(f"{courier} | загрузка: {courier.current_load(orders):g} кг")
 
 
 def print_menu() -> None:
@@ -121,7 +75,7 @@ def print_menu() -> None:
 
 
 def _parse_order_ids(value: str) -> list[int]:
-    """Преобразовать строку номеров через запятую в список целых чисел."""
+    """Преобразовать номера через запятую в список целых чисел."""
     try:
         order_ids = [int(item.strip()) for item in value.split(",")]
     except ValueError as error:
@@ -133,14 +87,27 @@ def _parse_order_ids(value: str) -> list[int]:
     return order_ids
 
 
+def save_all(
+    clients: list[Client],
+    couriers: list[Courier],
+    orders: list[Order],
+    routes: list[Route],
+) -> None:
+    """Сохранить все коллекции объектов перед завершением программы."""
+    save_clients(CLIENTS_FILE, clients)
+    save_couriers(COURIERS_FILE, couriers)
+    save_orders(ORDERS_FILE, orders)
+    save_routes(ROUTES_FILE, routes)
+
+
 def main() -> None:
-    """Загрузить данные и запустить цикл обработки команд пользователя."""
+    """Загрузить объектный граф и запустить обработку команд пользователя."""
     try:
-        orders = load_orders(ORDERS_FILE)
-        couriers = load_couriers(COURIERS_FILE)
         clients = load_clients(CLIENTS_FILE)
-        routes = load_routes(ROUTES_FILE)
-    except (OSError, ValueError) as error:
+        couriers = load_couriers(COURIERS_FILE)
+        orders = load_orders(ORDERS_FILE, clients, couriers)
+        routes = load_routes(ROUTES_FILE, orders, couriers)
+    except (KeyError, OSError, TypeError, ValueError) as error:
         print(f"Не удалось запустить приложение: {error}")
         return
 
@@ -148,27 +115,30 @@ def main() -> None:
         print_menu()
         choice = input("Выберите действие: ").strip()
         if choice == "0":
-            print("Данные сохранены. До свидания!")
+            try:
+                save_all(clients, couriers, orders, routes)
+                print("Данные сохранены. До свидания!")
+            except OSError as error:
+                print(f"Не удалось сохранить данные: {error}")
             break
 
         try:
             if choice == "1":
-                show_orders(orders)
+                show_items(orders, "Список заказов пуст.")
             elif choice == "2":
                 destination = input("Адрес доставки: ").strip()
                 weight = input_float("Вес заказа, кг: ", minimum=0.01)
-                client_id = input_int("Номер клиента: ", minimum=1)
-                get_client(clients, client_id)
-                order = create_order(
-                    orders, destination, weight, client_id=client_id
+                client = get_client(
+                    clients, input_int("Номер клиента: ", minimum=1)
                 )
+                order = create_order(orders, destination, weight, client)
                 save_orders(ORDERS_FILE, orders)
-                print(f"Заказ #{order['id']} создан.")
+                print(f"Заказ #{order.id} создан.")
             elif choice == "3":
-                query = input("Адрес или имя курьера: ").strip()
-                show_orders(find_orders(orders, query))
+                query = input("Адрес, клиент или курьер: ").strip()
+                show_items(find_orders(orders, query), "Заказы не найдены.")
             elif choice == "4":
-                show_orders(sort_orders(orders, key="weight"))
+                show_items(sort_orders(orders, key="weight"), "Нет заказов.")
             elif choice == "5":
                 show_couriers(couriers, orders)
             elif choice == "6":
@@ -194,15 +164,17 @@ def main() -> None:
                 efficiency = calculate_efficiency(orders)
                 print(f"Эффективность назначения: {efficiency:.1f}%")
             elif choice == "10":
-                show_clients(clients)
+                show_items(clients, "Список клиентов пуст.")
             elif choice == "11":
-                name = input("ФИО клиента: ").strip()
-                phone = input("Телефон клиента: ").strip()
-                client = add_client(clients, name, phone)
+                client = add_client(
+                    clients,
+                    input("ФИО клиента: ").strip(),
+                    input("Телефон клиента: ").strip(),
+                )
                 save_clients(CLIENTS_FILE, clients)
-                print(f"Клиент #{client['id']} добавлен.")
+                print(f"Клиент #{client.id} добавлен.")
             elif choice == "12":
-                show_routes(routes)
+                show_items(routes, "Список маршрутов пуст.")
             elif choice == "13":
                 courier_name = input("Имя курьера: ").strip()
                 raw_ids = input("Номера заказов через запятую: ")
@@ -214,7 +186,7 @@ def main() -> None:
                     _parse_order_ids(raw_ids),
                 )
                 save_routes(ROUTES_FILE, routes)
-                print(f"Маршрут #{route['id']} создан.")
+                print(f"Маршрут #{route.id} создан.")
             elif choice == "14":
                 route_id = input_int("Номер маршрута: ", minimum=1)
                 complete_route(routes, orders, route_id)
@@ -223,10 +195,10 @@ def main() -> None:
                 print(f"Маршрут #{route_id} завершён.")
             elif choice == "15":
                 query = input("Имя или телефон клиента: ").strip()
-                show_clients(find_clients(clients, query))
+                show_items(find_clients(clients, query), "Клиенты не найдены.")
             else:
                 print("Ошибка: выберите существующий пункт меню.")
-        except (OSError, ValueError) as error:
+        except (KeyError, OSError, TypeError, ValueError) as error:
             print(f"Ошибка: {error}")
 
 

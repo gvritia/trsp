@@ -5,7 +5,7 @@
     "weight": 25.5,
     "client_id": 1,
     "status": "назначен",
-    "courier": "Иван"
+    "courier_id": 1
   },
   {
     "id": 2,
@@ -13,7 +13,7 @@
     "weight": 10.0,
     "client_id": 2,
     "status": "назначен",
-    "courier": "Мария"
+    "courier_id": 2
   },
   {
     "id": 3,
@@ -21,7 +21,7 @@
     "weight": 60.0,
     "client_id": 3,
     "status": "создан",
-    "courier": null
+    "courier_id": null
   },
   {
     "id": 4,
@@ -29,6 +29,6 @@
     "weight": 67.0,
     "client_id": 1,
     "status": "создан",
-    "courier": null
+    "courier_id": null
   }
 ]

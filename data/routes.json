@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "courier": "Иван",
+    "courier_id": 1,
     "order_ids": [
       1
     ],
@@ -9,7 +9,7 @@
   },
   {
     "id": 2,
-    "courier": "Мария",
+    "courier_id": 2,
     "order_ids": [
       2
     ],
