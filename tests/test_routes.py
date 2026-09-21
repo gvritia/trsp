@@ -1,43 +1,35 @@
-"""Тесты функций планирования маршрутов."""
+"""Тесты объектной модели маршрутов."""
 
 import pytest
 
-from routes import complete_route, create_route
+from models import Client, Courier, Order, Route
+from models.routes import complete_route, create_route
 
 
-def sample_couriers() -> list[dict]:
-    """Вернуть тестовый список курьеров."""
-    return [{"id": 1, "name": "Иван", "capacity": 50.0, "active": True}]
+def sample_graph() -> tuple[list[Courier], list[Order]]:
+    """Вернуть связанные объекты курьера и назначенного заказа."""
+    client = Client(1, "Анна", "+7-900-111-22-33")
+    courier = Courier(1, "Иван", 50.0)
+    order = Order(1, "ул. Новая, 1", 12.0, client, "назначен", courier)
+    return [courier], [order]
 
 
-def sample_orders() -> list[dict]:
-    """Вернуть назначенный тестовый заказ."""
-    return [
-        {
-            "id": 1,
-            "destination": "ул. Новая, 1",
-            "weight": 12.0,
-            "client_id": 1,
-            "status": "назначен",
-            "courier": "Иван",
-        }
-    ]
+def test_create_and_complete_route_changes_object_states() -> None:
+    couriers, orders = sample_graph()
+    routes: list[Route] = []
 
+    route = create_route(routes, orders, couriers, "иван", [1])
+    complete_route(routes, orders, route.id)
 
-def test_create_and_complete_route() -> None:
-    routes = []
-    orders = sample_orders()
-
-    route = create_route(routes, orders, sample_couriers(), "иван", [1])
-    complete_route(routes, orders, route["id"])
-
-    assert route["status"] == "завершён"
-    assert orders[0]["status"] == "доставлен"
+    assert route.courier is couriers[0]
+    assert route.orders[0] is orders[0]
+    assert route.status == "завершён"
+    assert orders[0].status == "доставлен"
 
 
 def test_route_rejects_order_of_another_courier() -> None:
-    orders = sample_orders()
-    orders[0]["courier"] = "Мария"
+    couriers, orders = sample_graph()
+    orders[0].courier = Courier(2, "Мария", 50.0)
 
     with pytest.raises(ValueError, match="другому курьеру"):
-        create_route([], orders, sample_couriers(), "Иван", [1])
+        create_route([], orders, couriers, "Иван", [1])
