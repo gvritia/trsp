@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-
 JsonRecord = dict[str, Any]
 
 
@@ -54,3 +53,23 @@ def load_couriers(file_path: Path) -> list[JsonRecord]:
 def save_couriers(file_path: Path, couriers: list[JsonRecord]) -> None:
     """Сохранить курьеров в JSON-файл."""
     save_records(file_path, couriers)
+
+
+def load_clients(file_path: Path) -> list[JsonRecord]:
+    """Загрузить клиентов из JSON-файла."""
+    return load_records(file_path)
+
+
+def save_clients(file_path: Path, clients: list[JsonRecord]) -> None:
+    """Сохранить клиентов в JSON-файл."""
+    save_records(file_path, clients)
+
+
+def load_routes(file_path: Path) -> list[JsonRecord]:
+    """Загрузить маршруты из JSON-файла."""
+    return load_records(file_path)
+
+
+def save_routes(file_path: Path, routes: list[JsonRecord]) -> None:
+    """Сохранить маршруты в JSON-файл."""
+    save_records(file_path, routes)

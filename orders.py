@@ -2,7 +2,6 @@
 
 from typing import Any, Iterator
 
-
 Order = dict[str, Any]
 
 
@@ -12,7 +11,10 @@ def _next_order_id(orders: list[Order]) -> int:
 
 
 def create_order(
-    orders: list[Order], destination: str, weight: float
+    orders: list[Order],
+    destination: str,
+    weight: float,
+    client_id: int | None = None,
 ) -> Order:
     """Создать новый заказ и добавить его в переданный список."""
     destination = destination.strip()
@@ -25,6 +27,7 @@ def create_order(
         "id": _next_order_id(orders),
         "destination": destination,
         "weight": float(weight),
+        "client_id": client_id,
         "status": "создан",
         "courier": None,
     }
@@ -68,7 +71,14 @@ def sort_orders(
     orders: list[Order], key: str = "destination", reverse: bool = False
 ) -> list[Order]:
     """Вернуть новую коллекцию заказов, отсортированную по указанному полю."""
-    allowed_keys = {"id", "destination", "weight", "status", "courier"}
+    allowed_keys = {
+        "id",
+        "destination",
+        "weight",
+        "client_id",
+        "status",
+        "courier",
+    }
     if key not in allowed_keys:
         raise ValueError(f"сортировка по полю {key!r} не поддерживается")
 
