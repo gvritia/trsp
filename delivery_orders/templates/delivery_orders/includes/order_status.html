@@ -1,0 +1,9 @@
+{% if order.status == "назначен" %}
+    <span class="status-badge status-assigned">{{ order.status }}</span>
+{% elif order.status == "доставлен" %}
+    <span class="status-badge status-delivered">{{ order.status }}</span>
+{% elif order.status == "отменён" %}
+    <span class="status-badge status-cancelled">{{ order.status }}</span>
+{% else %}
+    <span class="status-badge status-created">{{ order.status }}</span>
+{% endif %}

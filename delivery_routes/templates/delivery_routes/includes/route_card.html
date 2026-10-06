@@ -1,0 +1,15 @@
+<article class="route-card h-100">
+    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+        <h2 class="h5 mb-0">Маршрут #{{ route.id }}</h2>
+        {% if route.status == "завершён" %}
+            <span class="status-badge status-delivered">{{ route.status }}</span>
+        {% else %}
+            <span class="status-badge status-assigned">{{ route.status }}</span>
+        {% endif %}
+    </div>
+    <p class="mb-1">Курьер: <strong>{{ route.courier.name }}</strong></p>
+    <p class="text-muted mb-3">Заказов: {{ route.orders|length }}</p>
+    <a class="stretched-link" href="{% url 'delivery_routes:detail' route.id %}">
+        Подробнее о маршруте
+    </a>
+</article>

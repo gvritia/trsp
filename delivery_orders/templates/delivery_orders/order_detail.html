@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Заказ #{{ order.id }} · Система доставки{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4">
+    <h1>Заказ #{{ order.id }}</h1>
+</div>
+<div class="surface-card p-4 mb-3">
+    <dl class="row mb-0 detail-list">
+        <dt class="col-sm-4">ID</dt><dd class="col-sm-8">{{ order.id }}</dd>
+        <dt class="col-sm-4">Адрес</dt>
+        <dd class="col-sm-8">{{ order.destination }}</dd>
+        <dt class="col-sm-4">Вес</dt>
+        <dd class="col-sm-8">{{ order.weight|floatformat:1 }} кг</dd>
+        <dt class="col-sm-4">Клиент</dt>
+        <dd class="col-sm-8">{{ order.client.name }}</dd>
+        <dt class="col-sm-4">Курьер</dt>
+        <dd class="col-sm-8">
+            {% if order.courier %}
+                {{ order.courier.name }}
+            {% else %}
+                Не назначен
+            {% endif %}
+        </dd>
+        <dt class="col-sm-4">Статус</dt>
+        <dd class="col-sm-8">
+            {% include "delivery_orders/includes/order_status.html" %}
+        </dd>
+    </dl>
+</div>
+<p class="text-muted">{{ status_description }}</p>
+<a class="btn btn-outline-primary" href="{% url 'delivery_orders:list' %}">
+    К списку заказов
+</a>
+{% endblock %}

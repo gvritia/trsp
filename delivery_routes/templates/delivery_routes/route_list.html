@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Маршруты · Система доставки{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4">
+    <h1>Маршруты</h1>
+    <p class="text-muted mb-0">Всего маршрутов: {{ routes|length }}</p>
+</div>
+<div class="row g-3">
+    {% for route in routes %}
+        <div class="col-md-6 col-xl-4">
+            {% include "delivery_routes/includes/route_card.html" %}
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">Маршрутов пока нет.</div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

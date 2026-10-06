@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Страница не найдена · Система доставки{% endblock %}
+
+{% block content %}
+<section class="page-heading mb-4">
+    <h1>Страница не найдена</h1>
+</section>
+<div class="alert alert-warning" role="alert">{{ message }}</div>
+<a class="btn btn-primary" href="{% url back_url_name %}">{{ back_label }}</a>
+{% endblock %}

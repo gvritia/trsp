@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Главная · Система доставки{% endblock %}
+
+{% block content %}
+<section class="page-heading mb-4">
+    <h1>Система планирования маршрутов доставки</h1>
+    <p class="lead mb-0">
+        Просмотр заказов и маршрутов из существующего проекта.
+        Данные загружаются из JSON-файлов.
+    </p>
+</section>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3"><div class="stat-card">
+        <div class="stat-label">Заказы</div><div class="stat-value">{{ order_count }}</div>
+    </div></div>
+    <div class="col-sm-6 col-lg-3"><div class="stat-card">
+        <div class="stat-label">Маршруты</div><div class="stat-value">{{ route_count }}</div>
+    </div></div>
+    <div class="col-sm-6 col-lg-3"><div class="stat-card">
+        <div class="stat-label">Клиенты</div><div class="stat-value">{{ client_count }}</div>
+    </div></div>
+    <div class="col-sm-6 col-lg-3"><div class="stat-card">
+        <div class="stat-label">Курьеры</div><div class="stat-value">{{ courier_count }}</div>
+    </div></div>
+</div>
+
+<p class="mb-4">Назначено активных заказов:
+    <strong>{{ efficiency|floatformat:1 }}%</strong>.
+</p>
+<div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-primary" href="{% url 'delivery_orders:list' %}">Смотреть заказы</a>
+    <a class="btn btn-outline-primary" href="{% url 'delivery_routes:list' %}">Смотреть маршруты</a>
+</div>
+{% endblock %}

@@ -3,9 +3,13 @@
 import os
 
 import django
+from django.contrib.staticfiles import finders
 from django.conf import settings
 from django.test import Client, override_settings
+from django.urls import reverse
 
+from delivery_orders import views as order_views
+from delivery_routes import views as route_views
 from storage import load_delivery_data
 
 
@@ -26,7 +30,22 @@ def test_web_pages_show_existing_data() -> None:
     client = Client(HTTP_HOST="localhost")
 
     for url in ("/", "/orders/", "/routes/"):
-        assert client.get(url).status_code == 200
+        response = client.get(url)
+        assert response.status_code == 200
+        assert b"/static/homepage/css/style.css" in response.content
+        assert b"/static/homepage/js/main.js" in response.content
+        assert b"/static/homepage/img/delivery-logo.svg" in response.content
+
+    order_list_html = client.get("/orders/").content.decode("utf-8")
+    assert order.destination in order_list_html
+    assert reverse("delivery_orders:detail", args=[order.id]) in (
+        order_list_html
+    )
+    route_list_html = client.get("/routes/").content.decode("utf-8")
+    assert route.courier.name in route_list_html
+    assert reverse("delivery_routes:detail", args=[route.id]) in (
+        route_list_html
+    )
 
     order_response = client.get(f"/orders/{order.id}/")
     assert order_response.status_code == 200
@@ -57,3 +76,30 @@ def test_missing_objects_and_unknown_url_return_404() -> None:
         response = client.get(url)
         assert response.status_code == 404
         assert "<!DOCTYPE html>" in response.content.decode("utf-8")
+
+
+def test_project_static_files_are_discoverable() -> None:
+    """Проверить CSS, JavaScript и изображение в Django staticfiles."""
+    for asset in (
+        "homepage/css/style.css",
+        "homepage/js/main.js",
+        "homepage/img/delivery-logo.svg",
+    ):
+        assert finders.find(asset) is not None
+
+
+def test_empty_lists_use_template_fallback(monkeypatch) -> None:
+    """Пустые коллекции отображаются через тег empty в шаблонах."""
+    def empty_data(data_dir):
+        return [], [], [], []
+
+    monkeypatch.setattr(order_views, "load_delivery_data", empty_data)
+    monkeypatch.setattr(route_views, "load_delivery_data", empty_data)
+    client = Client(HTTP_HOST="localhost")
+
+    assert "Заказов пока нет" in client.get("/orders/").content.decode(
+        "utf-8"
+    )
+    assert "Маршрутов пока нет" in client.get("/routes/").content.decode(
+        "utf-8"
+    )
