@@ -89,3 +89,14 @@ def load_routes(
 def save_routes(file_path: Path, routes: list[Route]) -> None:
     """Преобразовать маршруты в JSON-данные и сохранить."""
     save_records(file_path, [route.to_data() for route in routes])
+
+
+def load_delivery_data(
+    data_dir: Path,
+) -> tuple[list[Client], list[Courier], list[Order], list[Route]]:
+    """Загрузить связанные объекты доставки из существующих JSON-файлов."""
+    clients = load_clients(data_dir / "clients.json")
+    couriers = load_couriers(data_dir / "couriers.json")
+    orders = load_orders(data_dir / "orders.json", clients, couriers)
+    routes = load_routes(data_dir / "routes.json", orders, couriers)
+    return clients, couriers, orders, routes
