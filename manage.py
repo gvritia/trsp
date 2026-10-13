@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
+"""Точка входа для команд Django: check, migrate, runserver и других."""
 import os
 import sys
 
 
 def main():
-    """Run administrative tasks."""
+    """Передать аргументы командной строки механизму управления Django."""
+    # manage.py всегда запускается с настройками этого проекта.
     os.environ.setdefault(
         'DJANGO_SETTINGS_MODULE', 'delivery_planner.settings'
     )
@@ -17,6 +18,7 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
+    # Например, sys.argv содержит manage.py и имя команды runserver.
     execute_from_command_line(sys.argv)
 
 

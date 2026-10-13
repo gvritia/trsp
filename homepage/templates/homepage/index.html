@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{# Эти значения переданы view-функцией index через словарь context. #}
 
 {% block title %}Главная · Система доставки{% endblock %}
 
@@ -27,6 +28,7 @@
 </div>
 
 <p class="mb-4">Назначено активных заказов:
+    {# floatformat отвечает только за отображение числа. #}
     <strong>{{ efficiency|floatformat:1 }}%</strong>.
 </p>
 <div class="d-flex flex-wrap gap-2">

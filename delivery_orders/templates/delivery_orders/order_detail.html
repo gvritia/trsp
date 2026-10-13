@@ -17,6 +17,7 @@
         <dd class="col-sm-8">{{ order.client.name }}</dd>
         <dt class="col-sm-4">Курьер</dt>
         <dd class="col-sm-8">
+            {# У созданного заказа связь с курьером может отсутствовать. #}
             {% if order.courier %}
                 {{ order.courier.name }}
             {% else %}

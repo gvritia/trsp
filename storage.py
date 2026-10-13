@@ -95,6 +95,8 @@ def load_delivery_data(
     data_dir: Path,
 ) -> tuple[list[Client], list[Courier], list[Order], list[Route]]:
     """Загрузить связанные объекты доставки из существующих JSON-файлов."""
+    # Порядок важен: заказу нужны объекты клиента и курьера,
+    # а маршруту — уже восстановленные заказы и курьеры.
     clients = load_clients(data_dir / "clients.json")
     couriers = load_couriers(data_dir / "couriers.json")
     orders = load_orders(data_dir / "orders.json", clients, couriers)

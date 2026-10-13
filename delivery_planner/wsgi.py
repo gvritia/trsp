@@ -1,16 +1,11 @@
-"""
-WSGI config for delivery_planner project.
-
-It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
-"""
+"""Точка входа Django для обычного синхронного WSGI-сервера."""
 
 import os
 
 from django.core.wsgi import get_wsgi_application
 
+# Этот модуль настроек будет использован, если переменная ещё не задана.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'delivery_planner.settings')
 
+# WSGI-сервер импортирует этот объект application для обработки HTTP-запросов.
 application = get_wsgi_application()

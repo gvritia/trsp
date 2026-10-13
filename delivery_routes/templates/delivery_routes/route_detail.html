@@ -23,6 +23,7 @@
 </div>
 <h2 class="h4 mb-3">Заказы маршрута</h2>
 <ul class="list-group mb-4 route-orders">
+    {# route.orders — связи, восстановленные при загрузке JSON в storage.py. #}
     {% for order in route.orders %}
         <li class="list-group-item">
             <a href="{% url 'delivery_orders:detail' order.id %}">

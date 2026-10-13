@@ -3,14 +3,16 @@
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Корень репозитория: от него ищем шаблоны, JSON-файлы и служебную БД.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+# Переменные окружения позволяют менять эти значения без правки исходников.
+# Значения по умолчанию рассчитаны только на локальную разработку.
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY", "django-insecure-local-study-project-only"
 )
-DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
+DEBUG = False
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 
@@ -23,6 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Наши веб-разделы; предметные классы остаются в корневом пакете models.
     'homepage',
     'delivery_orders',
     'delivery_routes',
@@ -43,6 +46,7 @@ ROOT_URLCONF = 'delivery_planner.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        # Общий base.html лежит в корне, шаблоны страниц — внутри приложений.
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -64,6 +68,7 @@ WSGI_APPLICATION = 'delivery_planner.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
+        # Только служебные таблицы Django; заказы и маршруты остаются в JSON.
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
@@ -112,7 +117,7 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
+# URL-префикс CSS, JavaScript и логотипа из каталогов static приложений.
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'

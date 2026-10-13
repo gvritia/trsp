@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Страница не найдена · Система доставки{% endblock %}
+{% block title %}{{ page_title|default:"Страница не найдена" }} · Система доставки{% endblock %}
 
 {% block content %}
 <section class="page-heading mb-4">
-    <h1>Страница не найдена</h1>
+    <h1>{{ page_title|default:"Страница не найдена" }}</h1>
 </section>
 <div class="alert alert-warning" role="alert">{{ message }}</div>
+{# back_url_name — имя маршрута, выбранное view-функцией для нужного раздела. #}
 <a class="btn btn-primary" href="{% url back_url_name %}">{{ back_label }}</a>
 {% endblock %}

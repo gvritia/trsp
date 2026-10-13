@@ -1,3 +1,4 @@
+{# Условие выбирает только оформление уже вычисленного статуса заказа. #}
 {% if order.status == "назначен" %}
     <span class="status-badge status-assigned">{{ order.status }}</span>
 {% elif order.status == "доставлен" %}

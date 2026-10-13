@@ -152,11 +152,11 @@ def find_orders(orders: list[Order], query: str) -> list[Order]:
         order
         for order in orders
         if normalized_query in order.destination.casefold()
-        or normalized_query in order.client.name.casefold()
-        or (
-            order.courier is not None
-            and normalized_query in order.courier.name.casefold()
-        )
+           or normalized_query in order.client.name.casefold()
+           or (
+               order.courier is not None
+               and normalized_query in order.courier.name.casefold()
+           )
     ]
 
 

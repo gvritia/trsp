@@ -18,6 +18,7 @@
             <th scope="col">Статус</th>
         </tr></thead>
         <tbody>
+        {# for перебирает объекты Order; empty показывает сообщение при пустом JSON. #}
         {% for order in orders %}
             {% include "delivery_orders/includes/order_row.html" %}
         {% empty %}

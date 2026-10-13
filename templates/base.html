@@ -1,4 +1,5 @@
 {% load static %}
+{# Общий каркас: дочерние шаблоны заменяют блоки title и content. #}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -9,6 +10,7 @@
     <link rel="stylesheet" href="{% static 'homepage/css/style.css' %}">
 </head>
 <body>
+    {# Навигация одна для всех страниц, поэтому она вынесена в include. #}
     {% include "includes/navigation.html" %}
     <main class="container py-4 py-md-5" id="main-content">
         {% block content %}{% endblock %}
@@ -20,6 +22,7 @@
     </footer>
     <button class="back-to-top" id="back-to-top" type="button"
             aria-label="Вернуться наверх" title="Вернуться наверх">↑</button>
+    {# static строит URL к файлу приложения, не путь на диске. #}
     <script src="{% static 'homepage/js/main.js' %}" defer></script>
 </body>
 </html>

@@ -8,6 +8,7 @@
     <p class="text-muted mb-0">Всего маршрутов: {{ routes|length }}</p>
 </div>
 <div class="row g-3">
+    {# Каждый маршрут выводится общей карточкой; empty покрывает пустой список. #}
     {% for route in routes %}
         <div class="col-md-6 col-xl-4">
             {% include "delivery_routes/includes/route_card.html" %}

@@ -78,6 +78,26 @@ def test_missing_objects_and_unknown_url_return_404() -> None:
         assert "<!DOCTYPE html>" in response.content.decode("utf-8")
 
 
+@override_settings(DEBUG=True)
+def test_route_id_errors_have_distinct_messages() -> None:
+    """Отличать неизвестный номер маршрута от нечислового ID."""
+    _, _, _, routes = load_delivery_data(settings.BASE_DIR / "data")
+    missing_route_id = max(155555, max(route.id for route in routes) + 1)
+    client = Client(HTTP_HOST="localhost")
+
+    missing = client.get(f"/routes/{missing_route_id}/")
+    invalid = client.get("/routes/jhjhhh/")
+
+    assert missing.status_code == invalid.status_code == 404
+    missing_html = missing.content.decode("utf-8")
+    invalid_html = invalid.content.decode("utf-8")
+    assert "Маршрут не найден" in missing_html
+    assert f"Маршрут с ID {missing_route_id} не найден" in missing_html
+    assert "Некорректный ID маршрута" in invalid_html
+    assert "ID маршрута должен быть" in invalid_html
+    assert missing_html != invalid_html
+
+
 def test_project_static_files_are_discoverable() -> None:
     """Проверить CSS, JavaScript и изображение в Django staticfiles."""
     for asset in (
