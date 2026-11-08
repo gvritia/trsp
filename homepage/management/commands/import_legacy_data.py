@@ -107,14 +107,29 @@ class Command(BaseCommand):
                 )
                 Route.objects.bulk_create(
                     [
-                        Route(id=row["id"], status=row["status"])
+                        Route(
+                            id=row["id"], status=row["status"],
+                            slug=f"marshrut-{row['id']}",
+                        )
                         for row in rows["routes"]
                     ]
                 )
                 for row in rows["route_orders"]:
                     RouteOrder.objects.create(**row)
                 Booking.objects.bulk_create(
-                    [Booking(**row) for row in rows["bookings"]]
+                    [
+                        Booking(
+                            id=row["id"], order_id=row["order_id"],
+                            courier_id=row["courier_id"],
+                            delivery_date=row["delivery_date"],
+                            status=(
+                                Booking.Status.CANCELLED
+                                if row["is_cancelled"]
+                                else Booking.Status.ACTIVE
+                            ),
+                        )
+                        for row in rows["bookings"]
+                    ]
                 )
         except Exception as exc:
             raise CommandError(f"Перенос отменён: {exc}") from exc

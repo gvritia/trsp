@@ -21,9 +21,7 @@ def valid_delivery_date(value: str) -> date:
 
 
 def find_available_couriers(day: date, weight: float = 0):
-    occupied_ids = Booking.objects.filter(
-        delivery_date=day, is_cancelled=False
-    ).values("courier_id")
+    occupied_ids = Booking.objects.active().for_date(day).values("courier_id")
     return (
         Courier.objects.filter(active=True, capacity__gte=weight)
         .exclude(pk__in=occupied_ids)
@@ -37,7 +35,7 @@ def reserve_courier(order_id: int, courier_id: int, day: date) -> Booking:
         courier = Courier.objects.filter(pk=courier_id).first()
         if order is None or order.status != Order.STATUS_CREATED:
             raise BookingError("Выберите созданный заказ.")
-        if Booking.objects.filter(order=order, is_cancelled=False).exists():
+        if Booking.objects.active().filter(order=order).exists():
             raise BookingError("Заказ уже имеет действующее бронирование.")
         if (
             courier is None
@@ -47,9 +45,12 @@ def reserve_courier(order_id: int, courier_id: int, day: date) -> Booking:
             raise BookingError(
                 "Курьер неактивен или не подходит по грузоподъёмности."
             )
-        if Booking.objects.filter(
-            courier=courier, delivery_date=day, is_cancelled=False
-        ).exists():
+        if (
+            Booking.objects.active()
+            .for_date(day)
+            .filter(courier=courier)
+            .exists()
+        ):
             raise BookingError("Курьер уже занят на эту дату.")
         try:
             # Уникальные ограничения защищают от двух одновременных запросов.

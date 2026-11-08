@@ -10,6 +10,7 @@ from django.urls import reverse
 
 from django.template.loader import render_to_string
 from delivery_bookings.models import Booking
+from delivery_routes.models import Route
 from storage import load_delivery_data
 
 
@@ -50,9 +51,9 @@ def test_web_pages_show_existing_data() -> None:
     )
     route_list_html = client.get("/routes/").content.decode("utf-8")
     assert route.courier.name in route_list_html
-    assert reverse("delivery_routes:detail", args=[route.id]) in (
-        route_list_html
-    )
+    route_slug_url = Route.objects.get(pk=route.id).get_absolute_url()
+    assert route_slug_url in route_list_html
+    assert client.get(route_slug_url).status_code == 200
 
     order_response = client.get(f"/orders/{order.id}/")
     assert order_response.status_code == 200
@@ -187,7 +188,7 @@ def test_booking_pages_search_reserve_and_cancel(rollback_orm) -> None:
         "/bookings/available/", {"date": day, "order_id": "4"}
     ).content.decode("utf-8")
 
-    booking_id = Booking.objects.get(order_id=3, is_cancelled=False).id
+    booking_id = Booking.objects.active().get(order_id=3).id
     assert client.post(f"/bookings/{booking_id}/cancel/").status_code == 302
     assert "Отменено" in client.get("/bookings/").content.decode("utf-8")
     stats = client.get("/statistics/").content.decode("utf-8")

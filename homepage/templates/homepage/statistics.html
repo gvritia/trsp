@@ -10,7 +10,7 @@
     <div class="col-sm-6"><div class="stat-card"><div class="stat-label">Средний вес заказа</div><div class="stat-value">{{ metrics.average_weight }} кг</div></div></div>
 </div>
 <h2 class="h4">Бронирования курьеров</h2>
-<p>Всего: {{ booking_metrics.total_bookings }}; действующих: {{ booking_metrics.active_bookings }}.</p>
+<p>Всего: {{ booking_metrics.total_bookings }}; действующих: {{ booking_metrics.active_bookings }}; отменённых: {{ booking_metrics.cancelled_bookings }}; завершённых: {{ booking_metrics.completed_bookings }}.</p>
 <div class="table-responsive surface-card mb-4"><table class="table mb-0">
     <thead><tr><th>Курьер</th><th>Действующих бронирований</th></tr></thead>
     <tbody>{% for row in bookings_by_courier %}<tr><td>{{ row.name }}</td><td>{{ row.booking_count }}</td></tr>{% empty %}<tr><td colspan="2">Курьеров нет.</td></tr>{% endfor %}</tbody>

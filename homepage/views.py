@@ -36,8 +36,16 @@ def index(request: HttpRequest) -> HttpResponse:
 
 
 def statistics(request: HttpRequest) -> HttpResponse:
-    booking_count = Booking.objects.count()
-    active_bookings = Booking.objects.filter(is_cancelled=False).count()
+    booking_metrics = Booking.objects.aggregate(
+        total_bookings=Count("id"),
+        active_bookings=Count("id", filter=Q(status=Booking.Status.ACTIVE)),
+        cancelled_bookings=Count(
+            "id", filter=Q(status=Booking.Status.CANCELLED)
+        ),
+        completed_bookings=Count(
+            "id", filter=Q(status=Booking.Status.COMPLETED)
+        ),
+    )
     statuses = (
         Order.objects.values("status")
         .annotate(order_count=Count("id"), total_weight=Sum("weight"))
@@ -48,7 +56,10 @@ def statistics(request: HttpRequest) -> HttpResponse:
             "orders", filter=Q(orders__status=Order.STATUS_ASSIGNED)
         ),
         total_weight=Coalesce(
-            Sum("orders__weight", filter=Q(orders__status=Order.STATUS_ASSIGNED)),
+            Sum(
+                "orders__weight",
+                filter=Q(orders__status=Order.STATUS_ASSIGNED),
+            ),
             Value(0.0),
         ),
     ).order_by("id")
@@ -62,7 +73,9 @@ def statistics(request: HttpRequest) -> HttpResponse:
         .order_by("name")
     )
     bookings_by_courier = Courier.objects.annotate(
-        booking_count=Count("bookings", filter=Q(bookings__is_cancelled=False))
+        booking_count=Count(
+            "bookings", filter=Q(bookings__status=Booking.Status.ACTIVE)
+        )
     ).order_by("id")
     return render(
         request,
@@ -80,10 +93,7 @@ def statistics(request: HttpRequest) -> HttpResponse:
             "busy_couriers": busy,
             "clients": Client.objects.order_by("id"),
             "couriers": Courier.objects.order_by("id"),
-            "booking_metrics": {
-                "total_bookings": booking_count,
-                "active_bookings": active_bookings,
-            },
+            "booking_metrics": booking_metrics,
             "bookings_by_courier": [
                 {"name": row.name, "booking_count": row.booking_count}
                 for row in bookings_by_courier

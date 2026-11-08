@@ -12,6 +12,7 @@ urlpatterns = [
     path("", views.route_list, name="list"),
     # route_id поступает в параметр одноимённой view-функции.
     path("<int:route_id>/", views.route_detail, name="detail"),
+    path("by-slug/<slug:slug>/", views.slug_detail, name="slug_detail"),
     # Не-число не подходит под int: показываем отдельное сообщение об ошибке.
     path("<str:route_id>/", views.invalid_route_id, name="invalid_id"),
 ]

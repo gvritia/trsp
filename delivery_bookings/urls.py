@@ -11,4 +11,5 @@ urlpatterns = [
     path("available/", views.available_couriers, name="available"),
     path("create/", views.create_booking, name="create"),
     path("<int:booking_id>/cancel/", views.cancel, name="cancel"),
+    path("<int:booking_id>/", views.booking_detail, name="detail"),
 ]

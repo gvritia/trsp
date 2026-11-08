@@ -92,7 +92,7 @@ def order_detail(request: HttpRequest, order_id: int) -> HttpResponse:
         )
     booking = (
         Booking.objects.select_related("courier")
-        .filter(order=order, is_cancelled=False)
+        .active().filter(order=order)
         .first()
     )
     return render(

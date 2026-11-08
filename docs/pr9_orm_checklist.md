@@ -53,7 +53,7 @@ Route.objects.get(pk=1).orders.all()                      # 11. Многие к�
 Order.objects.filter(Q(status="создан") | Q(weight__gt=60))  # 12. OR
 Order.objects.aggregate(average_weight=Avg("weight"))   # 13. Агрегат
 Order.objects.values("status").annotate(count=Count("id"), weight=Sum("weight"))  # 14. Группировка
-Courier.objects.annotate(bookings_count=Count("bookings", filter=Q(bookings__is_cancelled=False)))  # 15. Условный счётчик
+Courier.objects.annotate(bookings_count=Count("bookings", filter=Q(bookings__status=Booking.Status.ACTIVE)))  # 15. Условный счётчик
 ```
 
 Для проверки связи бронирования в shell при наличии записей: `booking = Booking.objects.select_related("order", "courier").first()`, затем `booking.order`, `booking.courier`, `booking.order.client`. Если бронирований пока нет, создайте одно через страницу `/bookings/available/` и повторите проверку. Отмена брони остаётся видна в `/bookings/`, но курьер вновь появляется в поиске свободных на эту дату.

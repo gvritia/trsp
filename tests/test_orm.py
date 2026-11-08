@@ -54,7 +54,7 @@ def test_booking_cancellation_releases_courier(rollback_orm):
     booking.cancel()
     reserve_courier(4, courier.pk, day + timedelta(days=1))
     assert courier in find_available_couriers(day, 60)
-    assert Booking.objects.get(pk=booking.pk).is_cancelled
+    assert Booking.objects.get(pk=booking.pk).status == Booking.Status.CANCELLED
 
 
 def test_orm_create_update_delete(rollback_orm):

@@ -10,7 +10,7 @@
     </div>
     <p class="mb-1">Курьер: <strong>{{ route.courier_name }}</strong></p>
     <p class="text-muted mb-3">Заказов: {{ route.order_count }}</p>
-    <a class="stretched-link" href="{% url 'delivery_routes:detail' route.id %}">
+    <a class="stretched-link" href="{{ route.url }}">
         Подробнее о маршруте
     </a>
 </article>

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Бронирование #{{ booking.id }} · Система доставки{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4"><h1>Бронирование #{{ booking.id }}</h1></div>
+<div class="surface-card p-4 mb-3">
+    <dl class="row mb-0 detail-list">
+        <dt class="col-sm-4">Дата</dt><dd class="col-sm-8">{{ booking.delivery_date|date:"Y-m-d" }}</dd>
+        <dt class="col-sm-4">Статус</dt><dd class="col-sm-8">{{ booking.get_status_display }}</dd>
+        <dt class="col-sm-4">Заказ</dt><dd class="col-sm-8"><a href="{% url 'delivery_orders:detail' booking.order_id %}">#{{ booking.order_id }}</a> — {{ booking.order.destination }}</dd>
+        <dt class="col-sm-4">Клиент</dt><dd class="col-sm-8">{{ booking.order.client.name }}</dd>
+        <dt class="col-sm-4">Курьер</dt><dd class="col-sm-8">{{ booking.courier.name }}</dd>
+    </dl>
+</div>
+<a class="btn btn-outline-primary" href="{% url 'delivery_bookings:list' %}">К списку бронирований</a>
+{% endblock %}

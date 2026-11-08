@@ -7,13 +7,13 @@
             <img class="brand-logo"
                  src="{% static 'homepage/img/delivery-logo.svg' %}"
                  alt="Логотип доставки" width="38" height="38">
-            <span>Система доставки</span>
+            <span>{{ site_title }}</span>
         </a>
         <div class="navbar-nav flex-row flex-wrap gap-3">
             <a class="nav-link" href="{% url 'homepage:index' %}">Главная</a>
             <a class="nav-link" href="{% url 'delivery_orders:list' %}">Заказы</a>
             <a class="nav-link" href="{% url 'delivery_routes:list' %}">Маршруты</a>
-            <a class="nav-link" href="{% url 'delivery_bookings:available' %}">Свободные курьеры</a>
+            <a class="nav-link" href="{% url 'delivery_bookings:available' %}">Свободные курьеры ({{ site_courier_count }})</a>
             <a class="nav-link" href="{% url 'delivery_bookings:list' %}">Бронирования</a>
             <a class="nav-link" href="{% url 'homepage:statistics' %}">Статистика</a>
         </div>
