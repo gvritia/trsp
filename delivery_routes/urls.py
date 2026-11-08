@@ -8,6 +8,7 @@ from . import views
 app_name = "delivery_routes"
 
 urlpatterns = [
+    # ПР7, чек-лист 7.2 №24, №27: список маршрутов из SQLite.
     path("", views.route_list, name="list"),
     # route_id поступает в параметр одноимённой view-функции.
     path("<int:route_id>/", views.route_detail, name="detail"),

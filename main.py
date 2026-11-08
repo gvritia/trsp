@@ -157,7 +157,7 @@ def main() -> None:
                 print(f"Курьер назначен на заказ #{order_id}.")
             elif choice == "8":
                 order_id = input_int("Номер заказа: ", minimum=1)
-                cancel_order(orders, order_id)
+                cancel_order(orders, order_id, routes)
                 save_orders(ORDERS_FILE, orders)
                 print(f"Заказ #{order_id} отменён.")
             elif choice == "9":

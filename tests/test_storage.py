@@ -22,7 +22,7 @@ def test_object_graph_json_round_trip(tmp_path: Path) -> None:
     client = Client(1, "Анна", "+7-900-111-22-33")
     courier = Courier(1, "Иван", 50.0)
     order = Order(1, "ул. Новая, 1", 12.0, client, "назначен", courier)
-    route = Route(1, courier, [order])
+    route = Route(1, [order])
     clients_file = tmp_path / "clients.json"
     couriers_file = tmp_path / "couriers.json"
     orders_file = tmp_path / "orders.json"
@@ -35,12 +35,13 @@ def test_object_graph_json_round_trip(tmp_path: Path) -> None:
     clients = load_clients(clients_file)
     couriers = load_couriers(couriers_file)
     orders = load_orders(orders_file, clients, couriers)
-    routes = load_routes(routes_file, orders, couriers)
+    routes = load_routes(routes_file, orders)
 
     assert orders[0].client is clients[0]
     assert orders[0].courier is couriers[0]
     assert routes[0].courier is couriers[0]
     assert routes[0].orders[0] is orders[0]
+    assert "courier_id" not in load_records(routes_file)[0]
 
 
 def test_invalid_json_is_reported(tmp_path: Path) -> None:

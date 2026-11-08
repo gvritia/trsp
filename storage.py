@@ -77,11 +77,10 @@ def save_orders(file_path: Path, orders: list[Order]) -> None:
 def load_routes(
     file_path: Path,
     orders: list[Order],
-    couriers: list[Courier],
 ) -> list[Route]:
-    """Загрузить маршруты и восстановить связи с заказами и курьерами."""
+    """Загрузить маршруты; курьер определяется через связанные заказы."""
     return [
-        Route.from_data(data, orders, couriers)
+        Route.from_data(data, orders)
         for data in load_records(file_path)
     ]
 
@@ -96,9 +95,9 @@ def load_delivery_data(
 ) -> tuple[list[Client], list[Courier], list[Order], list[Route]]:
     """Загрузить связанные объекты доставки из существующих JSON-файлов."""
     # Порядок важен: заказу нужны объекты клиента и курьера,
-    # а маршруту — уже восстановленные заказы и курьеры.
+    # а маршруту — уже восстановленные заказы с назначенными курьерами.
     clients = load_clients(data_dir / "clients.json")
     couriers = load_couriers(data_dir / "couriers.json")
     orders = load_orders(data_dir / "orders.json", clients, couriers)
-    routes = load_routes(data_dir / "routes.json", orders, couriers)
+    routes = load_routes(data_dir / "routes.json", orders)
     return clients, couriers, orders, routes

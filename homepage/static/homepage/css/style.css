@@ -18,14 +18,35 @@ main {
 }
 
 .site-navbar {
-    background: var(--delivery-blue);
+    background-color: #eaf1f8 !important;
+    border-bottom: 1px solid #cbdbe9;
     box-shadow: 0 3px 12px rgb(20 55 90 / 12%);
+}
+
+.site-navbar .navbar-brand,
+.site-navbar .nav-link {
+    color: #173b59;
+    font-weight: 600;
+}
+
+.site-navbar .navbar-brand:hover,
+.site-navbar .navbar-brand:focus,
+.site-navbar .nav-link:hover,
+.site-navbar .nav-link:focus {
+    color: #0e2c46;
 }
 
 .site-navbar .nav-link:hover,
 .site-navbar .nav-link:focus {
+    background: #d6e6f3;
+    border-radius: 6px;
     text-decoration: underline;
     text-underline-offset: 5px;
+}
+
+.site-navbar .nav-link:focus-visible {
+    outline: 2px solid var(--delivery-blue);
+    outline-offset: 2px;
 }
 
 .brand-logo {

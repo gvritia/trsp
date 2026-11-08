@@ -1,9 +1,12 @@
 """Класс заказа и функции обработки коллекции заказов."""
 
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator
 
 from .clients import Client, get_client
 from .couriers import Courier, find_courier, get_courier
+
+if TYPE_CHECKING:
+    from .routes import Route
 
 
 class Order:
@@ -152,11 +155,11 @@ def find_orders(orders: list[Order], query: str) -> list[Order]:
         order
         for order in orders
         if normalized_query in order.destination.casefold()
-           or normalized_query in order.client.name.casefold()
-           or (
-               order.courier is not None
-               and normalized_query in order.courier.name.casefold()
-           )
+        or normalized_query in order.client.name.casefold()
+        or (
+            order.courier is not None
+            and normalized_query in order.courier.name.casefold()
+        )
     ]
 
 
@@ -213,9 +216,16 @@ def assign_courier(
     return True
 
 
-def cancel_order(orders: list[Order], order_id: int) -> bool:
+def cancel_order(
+    orders: list[Order], order_id: int, routes: list["Route"] | None = None
+) -> bool:
     """Найти заказ и вызвать его метод отмены."""
-    get_order(orders, order_id).cancel()
+    order = get_order(orders, order_id)
+    if routes and any(order in route.orders for route in routes):
+        raise ValueError(
+            "нельзя отменить заказ, включённый в маршрут"
+        )
+    order.cancel()
     return True
 
 

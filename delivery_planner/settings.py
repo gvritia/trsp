@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-# Корень репозитория: от него ищем шаблоны, JSON-файлы и служебную БД.
+# Корень репозитория: от него ищем шаблоны и служебную БД Django.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -12,7 +12,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY", "django-insecure-local-study-project-only"
 )
-DEBUG = False
+# В локальном runserver режим отладки включает раздачу staticfiles.
+DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 
@@ -29,6 +30,7 @@ INSTALLED_APPS = [
     'homepage',
     'delivery_orders',
     'delivery_routes',
+    'delivery_bookings',
 ]
 
 MIDDLEWARE = [
@@ -68,7 +70,7 @@ WSGI_APPLICATION = 'delivery_planner.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        # Только служебные таблицы Django; заказы и маршруты остаются в JSON.
+        # Здесь же хранятся предметные таблицы Django ORM.
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }

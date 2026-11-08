@@ -7,8 +7,11 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # include передаёт оставшуюся часть URL в urls.py выбранного приложения.
     path("", include("homepage.urls")),
+    # ПР7, 7.6 №15 и №25: /orders/ передаётся в delivery_orders/urls.py.
+    # Часть ?status=создан не участвует в выборе URL; она попадёт в request.GET.
     path("orders/", include("delivery_orders.urls")),
     path("routes/", include("delivery_routes.urls")),
+    path("bookings/", include("delivery_bookings.urls")),
 ]
 
 # Django вызывает этот обработчик для неизвестных URL при DEBUG=False.

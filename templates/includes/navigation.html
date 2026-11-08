@@ -1,6 +1,6 @@
 {% load static %}
-{# Именованные URL сохранят ссылки рабочими при изменении адресов в urls.py. #}
-<nav class="navbar navbar-expand-md navbar-dark site-navbar">
+{# ПР7, чек-лист 7.2 №27: переходы между разделами через именованные URL. #}
+<nav class="navbar navbar-expand-md bg-light site-navbar">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2"
            href="{% url 'homepage:index' %}">
@@ -10,9 +10,12 @@
             <span>Система доставки</span>
         </a>
         <div class="navbar-nav flex-row flex-wrap gap-3">
-            <a class="nav-link text-white" href="{% url 'homepage:index' %}">Главная</a>
-            <a class="nav-link text-white" href="{% url 'delivery_orders:list' %}">Заказы</a>
-            <a class="nav-link text-white" href="{% url 'delivery_routes:list' %}">Маршруты</a>
+            <a class="nav-link" href="{% url 'homepage:index' %}">Главная</a>
+            <a class="nav-link" href="{% url 'delivery_orders:list' %}">Заказы</a>
+            <a class="nav-link" href="{% url 'delivery_routes:list' %}">Маршруты</a>
+            <a class="nav-link" href="{% url 'delivery_bookings:available' %}">Свободные курьеры</a>
+            <a class="nav-link" href="{% url 'delivery_bookings:list' %}">Бронирования</a>
+            <a class="nav-link" href="{% url 'homepage:statistics' %}">Статистика</a>
         </div>
     </div>
 </nav>

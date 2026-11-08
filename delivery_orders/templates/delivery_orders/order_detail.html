@@ -14,12 +14,12 @@
         <dt class="col-sm-4">Вес</dt>
         <dd class="col-sm-8">{{ order.weight|floatformat:1 }} кг</dd>
         <dt class="col-sm-4">Клиент</dt>
-        <dd class="col-sm-8">{{ order.client.name }}</dd>
+        <dd class="col-sm-8">{{ order.client_name }}</dd>
         <dt class="col-sm-4">Курьер</dt>
         <dd class="col-sm-8">
             {# У созданного заказа связь с курьером может отсутствовать. #}
-            {% if order.courier %}
-                {{ order.courier.name }}
+            {% if order.courier_name %}
+                {{ order.courier_name }}
             {% else %}
                 Не назначен
             {% endif %}
@@ -31,6 +31,14 @@
     </dl>
 </div>
 <p class="text-muted">{{ status_description }}</p>
+{% if booking %}
+<div class="surface-card p-3 mb-3">
+    <strong>Бронирование курьера:</strong> {{ booking.courier_name }} на {{ booking.delivery_date|date:"Y-m-d" }}.
+    <a href="{% url 'delivery_bookings:list' %}">Все бронирования</a>
+</div>
+{% elif order.status == "создан" %}
+<a class="btn btn-primary mb-3" href="{% url 'delivery_bookings:available' %}?order_id={{ order.id }}">Подобрать курьера на дату</a>
+{% endif %}
 <a class="btn btn-outline-primary" href="{% url 'delivery_orders:list' %}">
     К списку заказов
 </a>

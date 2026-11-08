@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{# ПР7, чек-лист 7.2 №25: поиск курьера по дате и весу выбранного заказа. #}
+
+{% block title %}Свободные курьеры · Система доставки{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4">
+    <h1>Свободные курьеры</h1>
+    <p class="text-muted mb-0">Выберите дату. Для бронирования выберите созданный заказ: грузоподъёмность проверяется по его весу.</p>
+</div>
+<form method="get" class="surface-card p-3 mb-4 row g-3 align-items-end">
+    <div class="col-md-4">
+        <label for="delivery-date" class="form-label">Дата доставки</label>
+        <input id="delivery-date" name="date" type="date" class="form-control" value="{{ date }}" required>
+    </div>
+    <div class="col-md-6">
+        <label for="booking-order" class="form-label">Заказ</label>
+        <select id="booking-order" name="order_id" class="form-select">
+            <option value="">Все свободные курьеры</option>
+            {% for order in orders %}
+                <option value="{{ order.id }}" {% if order_id == order.id|stringformat:"s" %}selected{% endif %}>
+                    #{{ order.id }} — {{ order.destination }} ({{ order.weight|floatformat:1 }} кг)
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Найти</button></div>
+</form>
+
+{% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+{% if couriers != None %}
+    <h2 class="h4 mb-3">На {{ date }}{% if selected_order %} для заказа #{{ selected_order.id }}{% endif %}</h2>
+    <div class="table-responsive surface-card mb-4">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Курьер</th><th>Грузоподъёмность</th>{% if selected_order %}<th>Действие</th>{% endif %}</tr></thead>
+            <tbody>
+            {% for courier in couriers %}
+                <tr>
+                    <td>{{ courier.name }}</td>
+                    <td>{{ courier.capacity|floatformat:1 }} кг</td>
+                    {% if selected_order %}
+                        <td>
+                            <form method="post" action="{% url 'delivery_bookings:create' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="date" value="{{ date }}">
+                                <input type="hidden" name="order_id" value="{{ selected_order.id }}">
+                                <input type="hidden" name="courier_id" value="{{ courier.id }}">
+                                <button type="submit" class="btn btn-primary btn-sm">Забронировать</button>
+                            </form>
+                        </td>
+                    {% endif %}
+                </tr>
+            {% empty %}
+                <tr><td colspan="3" class="text-center py-4">На эту дату подходящих свободных курьеров нет.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+<a href="{% url 'delivery_bookings:list' %}">Посмотреть бронирования</a>
+{% endblock %}

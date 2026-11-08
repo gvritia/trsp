@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Статистика · Система доставки{% endblock %}
+
+{% block content %}
+{# Группировки и показатели рассчитаны ORM-запросами. #}
+<div class="page-heading mb-4"><h1>Статистика доставки</h1></div>
+<div class="row g-3 mb-4">
+    <div class="col-sm-6"><div class="stat-card"><div class="stat-label">Заказов</div><div class="stat-value">{{ metrics.total_orders }}</div></div></div>
+    <div class="col-sm-6"><div class="stat-card"><div class="stat-label">Средний вес заказа</div><div class="stat-value">{{ metrics.average_weight }} кг</div></div></div>
+</div>
+<h2 class="h4">Бронирования курьеров</h2>
+<p>Всего: {{ booking_metrics.total_bookings }}; действующих: {{ booking_metrics.active_bookings }}.</p>
+<div class="table-responsive surface-card mb-4"><table class="table mb-0">
+    <thead><tr><th>Курьер</th><th>Действующих бронирований</th></tr></thead>
+    <tbody>{% for row in bookings_by_courier %}<tr><td>{{ row.name }}</td><td>{{ row.booking_count }}</td></tr>{% empty %}<tr><td colspan="2">Курьеров нет.</td></tr>{% endfor %}</tbody>
+</table></div>
+<h2 class="h4">Заказы по статусам</h2>
+<div class="table-responsive surface-card mb-4"><table class="table mb-0">
+    <thead><tr><th>Статус</th><th>Количество</th><th>Общий вес</th></tr></thead>
+    <tbody>{% for row in statuses %}<tr><td>{{ row.status }}</td><td>{{ row.order_count }}</td><td>{{ row.total_weight }} кг</td></tr>{% empty %}<tr><td colspan="3">Заказов нет.</td></tr>{% endfor %}</tbody>
+</table></div>
+<h2 class="h4">Нагрузка курьеров</h2>
+<div class="table-responsive surface-card mb-4"><table class="table mb-0">
+    <thead><tr><th>Курьер</th><th>Активен</th><th>Грузоподъёмность</th><th>Назначенных заказов</th><th>Вес заказов</th></tr></thead>
+    <tbody>{% for row in workload %}<tr><td>{{ row.name }}</td><td>{% if row.active %}Да{% else %}Нет{% endif %}</td><td>{{ row.capacity }} кг</td><td>{{ row.order_count }}</td><td>{{ row.total_weight }} кг</td></tr>{% empty %}<tr><td colspan="5">Курьеров нет.</td></tr>{% endfor %}</tbody>
+</table></div>
+<h2 class="h4">Курьеры с назначенными заказами</h2>
+<ul class="surface-card p-3 mb-4">
+    {% for courier in busy_couriers %}
+        <li class="ms-3">{{ courier.name }} — {{ courier.assigned_orders }} заказ(ов)</li>
+    {% empty %}
+        <li class="ms-3">Назначенных заказов нет.</li>
+    {% endfor %}
+</ul>
+<div class="row g-3">
+    <div class="col-md-6"><div class="surface-card p-3 h-100"><h2 class="h4">Клиенты</h2><ul class="mb-0">{% for client in clients %}<li>{{ client.name }} — {{ client.phone }}</li>{% empty %}<li>Клиентов нет.</li>{% endfor %}</ul></div></div>
+    <div class="col-md-6"><div class="surface-card p-3 h-100"><h2 class="h4">Курьеры</h2><ul class="mb-0">{% for courier in couriers %}<li>{{ courier.name }} — {{ courier.capacity }} кг</li>{% empty %}<li>Курьеров нет.</li>{% endfor %}</ul></div></div>
+</div>
+{% endblock %}

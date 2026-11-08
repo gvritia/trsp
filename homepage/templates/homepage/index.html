@@ -8,7 +8,7 @@
     <h1>Система планирования маршрутов доставки</h1>
     <p class="lead mb-0">
         Просмотр заказов и маршрутов из существующего проекта.
-        Данные загружаются из JSON-файлов.
+        Данные загружаются через Django ORM.
     </p>
 </section>
 
@@ -34,5 +34,6 @@
 <div class="d-flex flex-wrap gap-2">
     <a class="btn btn-primary" href="{% url 'delivery_orders:list' %}">Смотреть заказы</a>
     <a class="btn btn-outline-primary" href="{% url 'delivery_routes:list' %}">Смотреть маршруты</a>
+    <a class="btn btn-outline-primary" href="{% url 'homepage:statistics' %}">Статистика</a>
 </div>
 {% endblock %}

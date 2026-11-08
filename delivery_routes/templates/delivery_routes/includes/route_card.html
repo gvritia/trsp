@@ -8,8 +8,8 @@
             <span class="status-badge status-assigned">{{ route.status }}</span>
         {% endif %}
     </div>
-    <p class="mb-1">Курьер: <strong>{{ route.courier.name }}</strong></p>
-    <p class="text-muted mb-3">Заказов: {{ route.orders|length }}</p>
+    <p class="mb-1">Курьер: <strong>{{ route.courier_name }}</strong></p>
+    <p class="text-muted mb-3">Заказов: {{ route.order_count }}</p>
     <a class="stretched-link" href="{% url 'delivery_routes:detail' route.id %}">
         Подробнее о маршруте
     </a>

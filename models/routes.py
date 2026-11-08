@@ -2,19 +2,18 @@
 
 from typing import Any
 
-from .couriers import Courier, find_courier, get_courier
+from .couriers import Courier, find_courier
 from .orders import Order, get_order
 
 
 class Route:
-    """Маршрут курьера, объединяющий несколько заказов."""
+    """Маршрут объединяет заказы; его курьер определяется через них."""
 
     VALID_STATUSES = {"запланирован", "завершён"}
 
     def __init__(
         self,
         route_id: int,
-        courier: Courier,
         orders: list[Order],
         status: str = "запланирован",
     ) -> None:
@@ -24,33 +23,44 @@ class Route:
             )
         if not orders:
             raise ValueError("маршрут должен содержать хотя бы один заказ")
+        if len({order.id for order in orders}) != len(orders):
+            raise ValueError("заказ не должен повторяться в маршруте")
+        courier = orders[0].courier
+        if courier is None or any(
+            order.courier is not courier for order in orders
+        ):
+            raise ValueError(
+                "все заказы маршрута должны иметь одного курьера"
+            )
         if status not in self.VALID_STATUSES:
             raise ValueError(f"неизвестный статус маршрута: {status}")
         self.id = route_id
-        self.courier = courier
         self.orders = orders
         self.status = status
+
+    @property
+    def courier(self) -> Courier:
+        """Получить курьера из заказов, не храня вторую связь в маршруте."""
+        courier = self.orders[0].courier
+        if courier is None or any(
+            order.courier is not courier for order in self.orders
+        ):
+            raise ValueError("у заказов маршрута нет общего курьера")
+        return courier
 
     @classmethod
     def from_data(
         cls,
         data: dict[str, Any],
         orders: list[Order],
-        couriers: list[Courier],
     ) -> "Route":
-        """Создать маршрут из JSON и восстановить объектные связи."""
-        courier_id = data.get("courier_id")
-        if courier_id is not None:
-            courier = get_courier(couriers, int(courier_id))
-        else:
-            courier = find_courier(couriers, str(data["courier"]))
+        """Восстановить маршрут по ID заказов; курьер берётся из заказов."""
         route_orders = [
             get_order(orders, int(order_id))
             for order_id in data.get("order_ids", [])
         ]
         return cls(
             int(data["id"]),
-            courier,
             route_orders,
             str(data.get("status", "запланирован")),
         )
@@ -59,7 +69,6 @@ class Route:
         """Преобразовать маршрут в данные для JSON."""
         return {
             "id": self.id,
-            "courier_id": self.courier.id,
             "order_ids": [order.id for order in self.orders],
             "status": self.status,
         }
@@ -124,7 +133,7 @@ def create_route(
             raise ValueError(f"заказ #{order_id} уже включён в маршрут")
         route_orders.append(order)
 
-    route = Route(_next_route_id(routes), courier, route_orders)
+    route = Route(_next_route_id(routes), route_orders)
     routes.append(route)
     return route
 

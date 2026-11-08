@@ -4,9 +4,9 @@
         <a href="{% url 'delivery_orders:detail' order.id %}">#{{ order.id }}</a>
     </th>
     <td>{{ order.destination|truncatechars:48 }}</td>
-    <td>{{ order.client.name }}</td>
+    <td>{{ order.client_name }}</td>
     <td>{{ order.weight|floatformat:1 }} кг</td>
     {# default подставляет текст, если курьер ещё не назначен. #}
-    <td>{{ order.courier.name|default:"Не назначен" }}</td>
+    <td>{{ order.courier_name|default:"Не назначен" }}</td>
     <td>{% include "delivery_orders/includes/order_status.html" %}</td>
 </tr>
