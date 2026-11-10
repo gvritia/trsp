@@ -40,13 +40,7 @@
                     <td>{{ courier.capacity|floatformat:1 }} кг</td>
                     {% if selected_order %}
                         <td>
-                            <form method="post" action="{% url 'delivery_bookings:create' %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="date" value="{{ date }}">
-                                <input type="hidden" name="order_id" value="{{ selected_order.id }}">
-                                <input type="hidden" name="courier_id" value="{{ courier.id }}">
-                                <button type="submit" class="btn btn-primary btn-sm">Забронировать</button>
-                            </form>
+                            <a class="btn btn-primary btn-sm" href="{% url 'delivery_bookings:create' %}?date={{ date|urlencode }}&amp;order_id={{ selected_order.id }}&amp;courier_id={{ courier.id }}">Забронировать</a>
                         </td>
                     {% endif %}
                 </tr>

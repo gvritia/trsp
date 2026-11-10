@@ -1,6 +1,7 @@
 """ПР7, 7.2 №23–24, №26, №29: страницы на данных SQLite."""
 
 import os
+from datetime import timedelta
 
 import django
 from django.contrib.staticfiles import finders
@@ -9,6 +10,7 @@ from django.test import Client, override_settings
 from django.urls import reverse
 
 from django.template.loader import render_to_string
+from django.utils import timezone
 from delivery_bookings.models import Booking
 from delivery_routes.models import Route
 from storage import load_delivery_data
@@ -158,7 +160,7 @@ def test_search_filter_and_statistics() -> None:
 def test_booking_pages_search_reserve_and_cancel(rollback_orm) -> None:
     """Полный путь через ORM с откатом изменений после теста."""
     client = Client(HTTP_HOST="localhost")
-    day = "2026-10-20"
+    day = (timezone.localdate() + timedelta(days=30)).isoformat()
 
     available = client.get(
         "/bookings/available/", {"date": day, "order_id": "3"}

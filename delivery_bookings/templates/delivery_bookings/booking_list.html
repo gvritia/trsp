@@ -8,42 +8,16 @@
     <p class="text-muted mb-0">Отменённые и завершённые записи сохраняются в истории и не занимают курьера.</p>
 </div>
 <a class="btn btn-primary mb-4" href="{% url 'delivery_bookings:available' %}">Найти свободного курьера</a>
+<a class="btn btn-outline-primary mb-4" href="{% url 'delivery_bookings:create' %}">Создать бронирование</a>
 {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
 <form method="get" class="surface-card p-3 mb-4 row g-3 align-items-end">
-    <div class="col-md-2">
-        <label for="booking-status" class="form-label">Статус</label>
-        <select id="booking-status" name="status" class="form-select">
-            <option value="">Все</option>
-            {% for value, label in statuses %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
-        </select>
-    </div>
-    <div class="col-md-2">
-        <label for="booking-date" class="form-label">Дата</label>
-        <input id="booking-date" name="date" type="date" value="{{ selected_date }}" class="form-control">
-    </div>
-    <div class="col-md-2">
-        <label for="booking-courier" class="form-label">Курьер</label>
-        <select id="booking-courier" name="courier" class="form-select">
-            <option value="">Все</option>
-            {% for courier in couriers %}<option value="{{ courier.id }}" {% if selected_courier == courier.id|stringformat:"s" %}selected{% endif %}>{{ courier.name }}</option>{% endfor %}
-        </select>
-    </div>
-    <div class="col-md-2">
-        <label for="booking-order" class="form-label">Заказ</label>
-        <select id="booking-order" name="order" class="form-select">
-            <option value="">Все</option>
-            {% for order in orders %}<option value="{{ order.id }}" {% if selected_order == order.id|stringformat:"s" %}selected{% endif %}>#{{ order.id }}</option>{% endfor %}
-        </select>
-    </div>
-    <div class="col-md-2">
-        <label for="booking-sort" class="form-label">Сортировка</label>
-        <select id="booking-sort" name="sort" class="form-select">
-            <option value="-date" {% if selected_sort == "-date" %}selected{% endif %}>Сначала новые</option>
-            <option value="date" {% if selected_sort == "date" %}selected{% endif %}>Сначала старые</option>
-            <option value="-id" {% if selected_sort == "-id" %}selected{% endif %}>ID по убыванию</option>
-            <option value="id" {% if selected_sort == "id" %}selected{% endif %}>ID по возрастанию</option>
-        </select>
-    </div>
+    {% for field in form %}
+        <div class="col-md-2">
+            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+    {% endfor %}
     <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Применить</button></div>
 </form>
 <div class="table-responsive surface-card">
@@ -58,6 +32,7 @@
                 <td>{{ booking.courier.name }}</td>
                 <td>{{ booking.get_status_display }}</td>
                 <td>
+                    <a class="btn btn-outline-primary btn-sm" href="{% url 'delivery_bookings:edit' booking.id %}">Изменить</a>
                     {% if booking.status == "active" %}
                         <form method="post" action="{% url 'delivery_bookings:cancel' booking.id %}">
                             {% csrf_token %}
@@ -74,9 +49,9 @@
 </div>
 {% if page_obj.paginator.num_pages > 1 %}
 <nav class="d-flex gap-2 mt-3" aria-label="Страницы бронирований">
-    {% if page_obj.has_previous %}<a class="btn btn-outline-primary" href="?{{ query_string }}&amp;page={{ page_obj.previous_page_number }}">Предыдущая</a>{% endif %}
+    {% if page_obj.has_previous %}<a class="btn btn-outline-primary" href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Предыдущая</a>{% endif %}
     <span class="align-self-center">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}<a class="btn btn-outline-primary" href="?{{ query_string }}&amp;page={{ page_obj.next_page_number }}">Следующая</a>{% endif %}
+    {% if page_obj.has_next %}<a class="btn btn-outline-primary" href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Следующая</a>{% endif %}
 </nav>
 {% endif %}
 {% endblock %}

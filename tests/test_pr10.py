@@ -114,8 +114,8 @@ def test_booking_filters_pagination_and_related_query(rollback_orm):
     assert "Страница 2 из 2" in html
     assert "status=active" in html and "sort=date" in html
     assert "Проверочный адрес 7" in html
-    assert "Проверочный адрес 0" not in html
-    assert "Проверочный адрес 1" not in html
+    assert "— Проверочный адрес 0" not in html
+    assert "— Проверочный адрес 1" not in html
     filtered = browser.get(
         "/bookings/",
         {
@@ -138,12 +138,18 @@ def test_booking_filters_pagination_and_related_query(rollback_orm):
     assert len(queries) == 1
     factory = RequestFactory()
     with CaptureQueriesContext(connection) as detail_queries:
-        assert booking_detail(
-            factory.get(f"/bookings/{bookings[0].pk}/"), bookings[0].pk
-        ).status_code == 200
+        assert (
+            booking_detail(
+                factory.get(f"/bookings/{bookings[0].pk}/"), bookings[0].pk
+            ).status_code
+            == 200
+        )
     assert len(detail_queries) <= 2
     with CaptureQueriesContext(connection) as list_queries:
-        assert booking_list(factory.get("/bookings/?status=active")).status_code == 200
+        assert (
+            booking_list(factory.get("/bookings/?status=active")).status_code
+            == 200
+        )
     assert len(list_queries) <= 5
 
 
@@ -220,14 +226,21 @@ def test_legacy_import_maps_booking_statuses(tmp_path):
             "VALUES (?, ?, ?, ?, ?)",
             [(1, 3, 3, "2027-06-01", 1), (2, 4, 3, "2027-06-02", 0)],
         )
-    environment = dict(os.environ, DJANGO_DB_PATH=str(target), DJANGO_DEBUG="0")
+    environment = dict(
+        os.environ, DJANGO_DB_PATH=str(target), DJANGO_DEBUG="0"
+    )
     command = [sys.executable, str(settings.BASE_DIR / "manage.py")]
     for arguments in (
-        ["migrate"], ["import_legacy_data", "--source", str(source)]
+        ["migrate"],
+        ["import_legacy_data", "--source", str(source)],
     ):
         subprocess.run(
-            command + arguments, cwd=settings.BASE_DIR, env=environment,
-            capture_output=True, text=True, check=True,
+            command + arguments,
+            cwd=settings.BASE_DIR,
+            env=environment,
+            capture_output=True,
+            text=True,
+            check=True,
         )
     with sqlite3.connect(target) as db:
         assert db.execute(

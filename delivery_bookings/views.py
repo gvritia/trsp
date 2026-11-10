@@ -1,17 +1,17 @@
-"""Поиск, фильтрация и управление бронированиями через Django ORM."""
+"""Формы поиска, создания, редактирования и отмены бронирований."""
 
 from django.core.paginator import Paginator
+from django.db import IntegrityError, transaction
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import redirect, render
-from django.views.decorators.http import require_POST
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_http_methods, require_POST
 
 from delivery_orders.models import Order
-from homepage.models import Courier
+from .forms import BookingFilterForm, BookingForm
 from .models import Booking
 from .services import (
     BookingError,
     find_available_couriers,
-    reserve_courier,
     valid_delivery_date,
 )
 
@@ -29,9 +29,8 @@ def _booking_queryset():
 
 
 def _availability_context(request: HttpRequest, error: str = "") -> dict:
-    values = request.GET if request.method == "GET" else request.POST
-    raw_date = values.get("date", "")
-    raw_order_id = values.get("order_id", "")
+    raw_date = request.GET.get("date", "")
+    raw_order_id = request.GET.get("order_id", "")
     orders = (
         Order.objects.filter(status=Order.STATUS_CREATED)
         .exclude(pk__in=Booking.objects.active().values("order_id"))
@@ -49,8 +48,9 @@ def _availability_context(request: HttpRequest, error: str = "") -> dict:
         try:
             day = valid_delivery_date(raw_date)
             if not error:
-                weight = selected_order.weight if selected_order else 0
-                couriers = find_available_couriers(day, weight)
+                couriers = find_available_couriers(
+                    day, selected_order.weight if selected_order else 0
+                )
         except BookingError as exc:
             error = str(exc)
     return {
@@ -72,26 +72,20 @@ def available_couriers(request: HttpRequest) -> HttpResponse:
 
 
 def booking_list(request: HttpRequest) -> HttpResponse:
+    form = BookingFilterForm(request.GET or None)
     bookings = _booking_queryset()
-    status = request.GET.get("status", "")
-    raw_date = request.GET.get("date", "")
-    raw_courier = request.GET.get("courier", "")
-    raw_order = request.GET.get("order", "")
-    sort = request.GET.get("sort", "-date")
-    if status in Booking.Status.values:
-        bookings = bookings.filter(status=status)
-    else:
-        status = ""
-    if raw_date:
-        try:
-            bookings = bookings.for_date(valid_delivery_date(raw_date))
-        except BookingError:
-            bookings = bookings.none()
-    if raw_courier.isdigit():
-        bookings = bookings.filter(courier_id=raw_courier)
-    if raw_order.isdigit():
-        bookings = bookings.filter(order_id=raw_order)
-    sort = sort if sort in ORDERING else "-date"
+    sort = "-date"
+    if form.is_valid():
+        values = form.cleaned_data
+        if values["status"]:
+            bookings = bookings.filter(status=values["status"])
+        if values["date"]:
+            bookings = bookings.for_date(values["date"])
+        if values["courier"]:
+            bookings = bookings.filter(courier=values["courier"])
+        if values["order"]:
+            bookings = bookings.filter(order=values["order"])
+        sort = values["sort"] or "-date"
     bookings = bookings.order_by(ORDERING[sort], "id")
     page = Paginator(bookings, PAGE_SIZE).get_page(request.GET.get("page"))
     params = request.GET.copy()
@@ -100,17 +94,10 @@ def booking_list(request: HttpRequest) -> HttpResponse:
         request,
         "delivery_bookings/booking_list.html",
         {
+            "form": form,
             "bookings": page.object_list,
             "page_obj": page,
             "query_string": params.urlencode(),
-            "selected_status": status,
-            "selected_date": raw_date,
-            "selected_courier": raw_courier,
-            "selected_order": raw_order,
-            "selected_sort": sort,
-            "statuses": Booking.Status.choices,
-            "couriers": Courier.objects.order_by("name"),
-            "orders": Order.objects.order_by("id"),
         },
     )
 
@@ -133,27 +120,85 @@ def booking_detail(request: HttpRequest, booking_id: int) -> HttpResponse:
     )
 
 
-@require_POST
+def _render_booking_form(request, form, title, submit_label, status=200):
+    return render(
+        request,
+        "delivery_bookings/booking_form.html",
+        {
+            "form": form,
+            "page_title": title,
+            "submit_label": submit_label,
+        },
+        status=status,
+    )
+
+
+def _create_post_data(request):
+    """Принять прежние имена полей из формы подбора курьера."""
+    data = request.POST.copy()
+    for old, new in (
+        ("order_id", "order"),
+        ("courier_id", "courier"),
+        ("date", "delivery_date"),
+    ):
+        if new not in data and old in data:
+            data[new] = data[old]
+    return data
+
+
+@require_http_methods(["GET", "POST"])
 def create_booking(request: HttpRequest) -> HttpResponse:
-    try:
-        reserve_courier(
-            int(request.POST.get("order_id", "")),
-            int(request.POST.get("courier_id", "")),
-            valid_delivery_date(request.POST.get("date", "")),
+    if request.method == "POST":
+        form = BookingForm(_create_post_data(request))
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    form.save()
+            except IntegrityError:
+                form.add_error(None, "Заказ или курьер уже забронирован.")
+            else:
+                return redirect("delivery_bookings:list")
+        return _render_booking_form(
+            request, form, "Новое бронирование", "Забронировать", status=400
         )
-    except (ValueError, BookingError) as exc:
-        error = (
-            str(exc)
-            if isinstance(exc, BookingError)
-            else "Выберите заказ и курьера."
-        )
-        return render(
+    form = BookingForm(
+        initial={
+            "order": request.GET.get("order_id", ""),
+            "courier": request.GET.get("courier_id", ""),
+            "delivery_date": request.GET.get("date", ""),
+        }
+    )
+    return _render_booking_form(
+        request, form, "Новое бронирование", "Забронировать"
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def edit_booking(request: HttpRequest, booking_id: int) -> HttpResponse:
+    booking = get_object_or_404(Booking, pk=booking_id)
+    if request.method == "POST":
+        form = BookingForm(request.POST, instance=booking)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    form.save()
+            except IntegrityError:
+                form.add_error(None, "Заказ или курьер уже забронирован.")
+            else:
+                return redirect(
+                    "delivery_bookings:detail", booking_id=booking.pk
+                )
+        return _render_booking_form(
             request,
-            "delivery_bookings/available.html",
-            _availability_context(request, error),
+            form,
+            f"Изменить бронирование #{booking.pk}",
+            "Сохранить",
             status=400,
         )
-    return redirect("delivery_bookings:list")
+    form = BookingForm(instance=booking)
+    return _render_booking_form(
+        request, form, f"Изменить бронирование #{booking.pk}", "Сохранить"
+    )
 
 
 @require_POST
@@ -162,12 +207,11 @@ def cancel(request: HttpRequest, booking_id: int) -> HttpResponse:
     if booking is None:
         return render(
             request,
-            "delivery_bookings/booking_list.html",
+            "homepage/not_found.html",
             {
-                "bookings": _booking_queryset().order_by(
-                    "-delivery_date", "id"
-                ),
-                "error": "Действующее бронирование не найдено.",
+                "message": "Действующее бронирование не найдено.",
+                "back_url_name": "delivery_bookings:list",
+                "back_label": "К списку бронирований",
             },
             status=404,
         )

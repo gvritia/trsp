@@ -13,5 +13,6 @@
         <dt class="col-sm-4">Курьер</dt><dd class="col-sm-8">{{ booking.courier.name }}</dd>
     </dl>
 </div>
+<a class="btn btn-primary me-2" href="{% url 'delivery_bookings:edit' booking.id %}">Изменить</a>
 <a class="btn btn-outline-primary" href="{% url 'delivery_bookings:list' %}">К списку бронирований</a>
 {% endblock %}
