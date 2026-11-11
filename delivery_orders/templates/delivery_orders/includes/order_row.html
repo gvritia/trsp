@@ -4,9 +4,10 @@
         <a href="{% url 'delivery_orders:detail' order.id %}">#{{ order.id }}</a>
     </th>
     <td>{{ order.destination|truncatechars:48 }}</td>
+    {# client_name — аннотация F("client__name") из order_list. #}
     <td>{{ order.client_name }}</td>
     <td>{{ order.weight|floatformat:1 }} кг</td>
-    {# default подставляет текст, если курьер ещё не назначен. #}
+    {# courier_name — аннотация F("courier__name"); default нужен при NULL. #}
     <td>{{ order.courier_name|default:"Не назначен" }}</td>
     <td>{% include "delivery_orders/includes/order_status.html" %}</td>
 </tr>

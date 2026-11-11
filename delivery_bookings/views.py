@@ -103,18 +103,9 @@ def booking_list(request: HttpRequest) -> HttpResponse:
 
 
 def booking_detail(request: HttpRequest, booking_id: int) -> HttpResponse:
-    booking = _booking_queryset().filter(pk=booking_id).first()
-    if booking is None:
-        return render(
-            request,
-            "homepage/not_found.html",
-            {
-                "message": "Бронирование не найдено.",
-                "back_url_name": "delivery_bookings:list",
-                "back_label": "К списку бронирований",
-            },
-            status=404,
-        )
+    # Возвращает объект по ID или вызывает Http404, если записи нет.
+    # select_related в _booking_queryset загружает связанные заказ и курьера.
+    booking = get_object_or_404(_booking_queryset(), pk=booking_id)
     return render(
         request, "delivery_bookings/booking_detail.html", {"booking": booking}
     )

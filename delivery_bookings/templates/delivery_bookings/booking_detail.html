@@ -3,6 +3,7 @@
 {% block title %}Бронирование #{{ booking.id }} · Система доставки{% endblock %}
 
 {% block content %}
+{# booking передан из booking_detail только после успешного get_object_or_404. #}
 <div class="page-heading mb-4"><h1>Бронирование #{{ booking.id }}</h1></div>
 <div class="surface-card p-4 mb-3">
     <dl class="row mb-0 detail-list">

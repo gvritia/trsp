@@ -12,5 +12,6 @@ urlpatterns = [
     path("create/", views.create_booking, name="create"),
     path("<int:booking_id>/edit/", views.edit_booking, name="edit"),
     path("<int:booking_id>/cancel/", views.cancel, name="cancel"),
+    # Число из URL передаётся в booking_detail для get_object_or_404.
     path("<int:booking_id>/", views.booking_detail, name="detail"),
 ]

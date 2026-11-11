@@ -1,6 +1,6 @@
 """Страницы заказов; выборка, фильтрация и пагинация через ORM."""
 
-from django.db.models import Q
+from django.db.models import F, Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 
@@ -22,7 +22,16 @@ def order_list(request: HttpRequest) -> HttpResponse:
     selected_status = (
         status if status in STATUS_DESCRIPTIONS or status == "активные" else ""
     )
-    orders = Order.objects.select_related("client", "courier").order_by("id")
+    # F обращается к полям связанных таблиц; annotate добавляет эти значения
+    # к объектам выборки без нового поля в модели или миграции.
+    orders = (
+        Order.objects.select_related("client", "courier")
+        .annotate(
+            client_name=F("client__name"),
+            courier_name=F("courier__name"),
+        )
+        .order_by("id")
+    )
     if query:
         orders = orders.filter(
             Q(destination__icontains=query)
@@ -50,8 +59,9 @@ def order_list(request: HttpRequest) -> HttpResponse:
             "destination": order.destination,
             "weight": order.weight,
             "status": order.status,
-            "client_name": order.client.name,
-            "courier_name": order.courier.name if order.courier else None,
+            # Имена получены из annotate и передаются в шаблон через context.
+            "client_name": order.client_name,
+            "courier_name": order.courier_name,
         }
         for order in orders
     ]
