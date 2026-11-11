@@ -164,7 +164,8 @@ def test_route_slug_and_global_context(rollback_orm):
     assert "Свободные курьеры (4)" in browser.get("/").content.decode("utf-8")
 
 
-def test_cancelled_bookings_survive_status_migration(tmp_path):
+def test_booking_statuses_survive_data_and_schema_migrations(tmp_path):
+    # Отдельная база позволяет пройти старую схему без изменения данных проекта.
     database = tmp_path / "migration.sqlite3"
     environment = dict(
         os.environ, DJANGO_DB_PATH=str(database), DJANGO_DEBUG="0"
@@ -187,9 +188,46 @@ def test_cancelled_bookings_survive_status_migration(tmp_path):
             "VALUES (1, 'Адрес', 1, 1, NULL, 'создан')"
         )
         db.execute(
+            "INSERT INTO delivery_orders_order "
+            "(id, destination, weight, client_id, courier_id, status) "
+            "VALUES (2, 'Адрес 2', 1, 1, NULL, 'создан')"
+        )
+        db.execute(
             "INSERT INTO delivery_bookings_booking "
             "(id, delivery_date, is_cancelled, order_id, courier_id) "
             "VALUES (1, '2027-05-01', 1, 1, 1)"
+        )
+        db.execute(
+            "INSERT INTO delivery_bookings_booking "
+            "(id, delivery_date, is_cancelled, order_id, courier_id) "
+            "VALUES (2, '2027-05-02', 0, 2, 1)"
+        )
+    subprocess.run(
+        command + ["delivery_bookings", "0004"],
+        cwd=settings.BASE_DIR,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    with sqlite3.connect(database) as db:
+        assert db.execute(
+            "SELECT id, status FROM delivery_bookings_booking ORDER BY id"
+        ).fetchall() == [
+            (1, Booking.Status.CANCELLED),
+            (2, Booking.Status.ACTIVE),
+        ]
+        columns = {
+            row[1]
+            for row in db.execute(
+                "PRAGMA table_info(delivery_bookings_booking)"
+            )
+        }
+        assert "is_cancelled" not in columns
+        # Завершённый статус появляется после перехода на новое поле.
+        db.execute(
+            "UPDATE delivery_bookings_booking SET status = 'completed' "
+            "WHERE id = 2"
         )
     subprocess.run(
         command + ["delivery_bookings"],
@@ -200,19 +238,13 @@ def test_cancelled_bookings_survive_status_migration(tmp_path):
         check=True,
     )
     with sqlite3.connect(database) as db:
-        assert (
-            db.execute(
-                "SELECT status FROM delivery_bookings_booking WHERE id = 1"
-            ).fetchone()[0]
-            == Booking.Status.CANCELLED
-        )
-        columns = {
-            row[1]
-            for row in db.execute(
-                "PRAGMA table_info(delivery_bookings_booking)"
-            )
-        }
-        assert "is_cancelled" not in columns
+        assert db.execute(
+            "SELECT id, status, note FROM delivery_bookings_booking "
+            "ORDER BY id"
+        ).fetchall() == [
+            (1, Booking.Status.CANCELLED, ""),
+            (2, Booking.Status.COMPLETED, ""),
+        ]
 
 
 def test_legacy_import_maps_booking_statuses(tmp_path):

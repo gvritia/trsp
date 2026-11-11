@@ -37,9 +37,13 @@ class Booking(models.Model):
         verbose_name="курьер",
     )
     delivery_date = models.DateField("дата доставки")
+    # Три состояния заменили прежний is_cancelled; перенос сделан в 0002–0004.
     status = models.CharField(
         "статус", max_length=10, choices=Status.choices, default=Status.ACTIVE
     )
+    # blank разрешает пустую форму; default заполняет поле у существующих строк.
+    # null не нужен: отсутствие примечания хранится как пустая строка.
+    note = models.CharField("примечание", max_length=255, blank=True, default="")
     objects = BookingQuerySet.as_manager()
 
     class Meta:

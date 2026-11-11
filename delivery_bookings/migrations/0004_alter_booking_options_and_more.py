@@ -25,6 +25,7 @@ class Migration(migrations.Migration):
             model_name='booking',
             name='unique_active_order_booking',
         ),
+        # После копирования статусов старый булев флаг можно убрать.
         migrations.RemoveField(
             model_name='booking',
             name='is_cancelled',

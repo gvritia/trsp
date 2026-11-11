@@ -5,6 +5,7 @@ class Migration(migrations.Migration):
     dependencies = [("delivery_bookings", "0001_initial")]
 
     operations = [
+        # Сначала добавляем новое поле с default: прежние строки получают active.
         migrations.AddField(
             model_name="booking",
             name="status",
